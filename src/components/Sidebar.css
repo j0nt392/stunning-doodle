@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+:root {
+    /* Define your color scheme with a slight blueish tint */
+    --color-bg-gradient-start: #e6e6e9; /* Light grey with a hint of blue */
+    --color-bg-gradient-end: #f0f0f0; /* Soft grey that transitions from the start color */
+    --color-accent: #a0a0a0; /* Darker grey for text or important elements */
+  }
+
+  .sidebar {
+      font-family: 'Lato', sans-serif;
+      background: #e6e6e9; /* Adjust the colors as needed */
+      width: 25%;
+      background-color: #e6e6e9; /* updated color */
+      position: fixed;
+      top: 50px;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      z-index: 500;
+  
+      /* Sketch-like border effect */
+      border-right: 2px var(--color-sidebar-border);
+  
+      /* Optional: add a shadow to the sidebar to give it depth */
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+
+  .sidebar .collapsible-section {
+    position: relative;
+}
+
+.sidebar .collapsible-section:after {
+    content: '';
+    display: block;
+    height: 5px; /* Height of the shadow */
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: -1;
+}
+
+.sidebar .collapsible-header {
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: 2px solid var(--color-sidebar-border);
+    top: 5px;
+    padding: 10px 15px;
+    background-color: var(--color-sidebar-bg);
+    margin: 0;
+    cursor: pointer;
+    position: relative; /* Required for stacking context */
+    z-index: 1; /* Ensures the header text appears above the pseudo-element shadow */
+}
+
+.circle-select{
+    text-align: left;
+}
+
+.circle-settings-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 20px;
+    padding-top: 10px;
+}
+
+.checkbox-label:nth-child(odd) {
+    justify-content: flex-start;
+}
+
+.circle-settings-grid div{
+    display: flex;
+    align-items: center;
+}
+
+.circle-settings-grid label {
+    margin-left: 5px;
+}
+
+.Scales-Modes{
+    text-align: left;
+}
+
+.Theory-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 20px;
+    padding-top: 10px;
+}

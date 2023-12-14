@@ -1,0 +1,34 @@
+.chord-circle {
+    max-width: 100%;
+    max-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.note-label {
+    font-size: 3px;
+    cursor: default;
+    user-select: none;
+}
+
+.chord-circle {
+    width: 90%;
+    height: auto;
+    margin: 0 auto;
+}
+
+.note-background {
+    stroke: black;
+    stroke-width: 0.2;
+}
+
+.rainbow-stroke {
+    stroke: url(#rainbowGradient);
+  }
+
+.default-stroke{
+    stroke: black;
+}
+
+
+
