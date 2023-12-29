@@ -1,9 +1,4 @@
-.chord-circle {
-    max-width: 100%;
-    max-height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-}
+
 
 .note-label {
     font-size: 3px;
@@ -11,10 +6,15 @@
     user-select: none;
 }
 
-.chord-circle {
-    width: 90%;
-    height: auto;
-    margin: 0 auto;
+
+  .chord-circle-container svg {
+    overflow: visible; /* Ensure nothing is clipped */
+    display: block; /* Remove inline display */
+    margin: auto; /* Center the SVG if it has a smaller size than its container */
+  }
+
+  .crosshair-cursor {
+    cursor: crosshair;
 }
 
 .note-background {

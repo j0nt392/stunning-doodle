@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import DefaultWaveform from './components/audioplayer';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ChordCircle from './components/ChordCircle';
@@ -8,9 +9,12 @@ function App() {
   const mediaRecorder = useRef(null);
   const [audioChunks, setAudioChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [receivedNotes, setReceivedNotes] = useState([]); // Define receivedNotes state
+  const [allReceivedNotes, setAllReceivedNotes] = useState([]);
   const [chord, setChord] = useState("");
+  const [progression, setProgression] = useState([]);
+  const [audioUrl, setAudioUrl] = useState(); // URL of the audio file
+  const [isDrawing, setIsDrawing] = useState(false);
+
   const sendAudioToServer = async (audioBlob) => {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
@@ -27,18 +31,45 @@ function App() {
       // Simulate received notes (replace with actual data from server)
       const simulatedNotes = result.notes; // Replace with actual received notes
       const chordName = result.chord;
+      addChordToProgression(chordName);
+
+      if (settings.storeShapes) {
+        setAllReceivedNotes(prevNotes => [...prevNotes, simulatedNotes]);
+      } else {
+        setAllReceivedNotes([simulatedNotes]);
+      }
+
       setChord(chordName);
-      setReceivedNotes(simulatedNotes); 
+      
       console.log('Server response:', result);
     } catch (error) {
       console.error('Failed to send audio to server:', error);
     }
   };
+  
+  // Function to add a new chord to the progression
+  const addChordToProgression = (chordName) => {
+    setProgression(prevProgression => [...prevProgression, chordName]);
+  };
 
-  const [preserveLines, setPreserveLines] = useState(false);
-  const handleCheckBoxChange = (isChecked) => {
-    setPreserveLines(isChecked)
-  }
+  // Function to handle chord click (to highlight the chord in the circle)
+  const handleChordClick = (chordName) => {
+    // Logic to highlight the chord in the circle
+    console.log(`Chord clicked: ${chordName}`);
+    // You can add the logic to highlight the chord here
+  };
+
+  const handleCheckBoxChange = (name, value) => {
+    setSettings(prevSettings => ({
+        ...prevSettings,
+        [name]: value,
+    }));
+  };
+  const handleDrawingControls = () => {
+    handleSettingsChange('isDrawing', !settings.isDrawing);
+    console.log(settings.isDrawing);
+  };
+
   const handleRecordClick = async () => {
     if (!isRecording) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -74,39 +105,57 @@ function App() {
     circleType: 'chromatic circle',
     enharmonic: false,
     dottedLines: false,
-    circleColorScheme: 'monochrome'
+    circleColorScheme: 'monochrome',
+    storeShapes: false,
+    shapeColorScheme: 'monochrome',
+    isDrawing: false
   });
 
-  const handleSettingsChange = (event) => {
-    const { name, type, checked, value } = event.target;
-    setSettings(prevSettings => ({
-        ...prevSettings,
-        [name]: type === 'checkbox' ? checked : value
-    }));console.log('Event received:', event);
-
+  const handleSettingsChange = (name, value) => {
+    setSettings(prevSettings => {
+        const newSettings = { ...prevSettings, [name]: value };
+        console.log("New settings:", newSettings); // Debugging line
+        return newSettings;
+    });
 };
 
   return (
     <div className="App">
       <Header />
       <Sidebar 
-      setPreserveLines={setPreserveLines}
       settings={settings} 
-      onSettingsChange={handleSettingsChange}
-      onCheckBoxChange={handleCheckBoxChange} />
+      onSettingsChange={handleSettingsChange} 
+      onCheckBoxChange={handleCheckBoxChange} 
+      progression={progression}
+      onChordClick={handleChordClick} />
       <div className="main-content">
+        <div class="drawing-controls">
+          <button 
+            id="draw-btn" 
+            class="control-btn"
+            onClick={handleDrawingControls}
+            >
+              <i class="fa fa-pencil-alt"></i>
+            </button>
+          <button id="undo-btn" class="control-btn"><i class="fa fa-undo"></i></button>
+          <button id="redo-btn" class="control-btn"><i class="fa fa-redo"></i></button>
+          <button id="delete-btn" class="control-btn"><i class="fa fa-trash"></i></button>
+        </div>
         <ChordCircle 
         settings={settings} 
-        receivedNotes={receivedNotes} 
-        preserveLines={preserveLines}
+        receivedNotes={allReceivedNotes} 
         dottedLines={settings.dottedLines}/>
         <label className="chord-name">{chord}</label>
+        <div className="bottom-container" style={{ width: '100%', height: '150px', backgroundColor: '#f3f3f3' }}>
         <button
           className={`record-button ${isRecording ? 'recording' : ''}`}
           onClick={handleRecordClick}>
           {isRecording ? <i className="fas fa-stop"></i> : <i className="fas fa-microphone"></i>}
         </button>
-        {/* {audioUrl && <audio src={audioUrl} controls />} */}
+        <div className="wavesurfer">
+          <DefaultWaveform  audioUrl={audioUrl}/>
+        </div>
+        </div>
       </div>
     </div>
   );

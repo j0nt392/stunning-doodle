@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import subprocess
@@ -8,6 +8,10 @@ app = Flask(__name__)
 CORS(app)
 chord_classifier = Chord_classifier()
 preprocessing = Chord_preprocessing()
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory('uploads', filename)
 
 @app.route('/audio', methods=['POST'])
 def receive_audio():
@@ -24,7 +28,7 @@ def receive_audio():
 
     # Convert the audio file to WAV using ffmpeg
     wav_path = os.path.join(uploads_dir, 'audio.wav')
-    subprocess.run(['ffmpeg', '-i', file_path, wav_path])
+    subprocess.run(['ffmpeg', '-y', '-i', file_path, wav_path])
 
     notes, chord = chord_classifier.predict_new_chord('uploads/audio.wav', 44100)
     chord = chord.tolist()

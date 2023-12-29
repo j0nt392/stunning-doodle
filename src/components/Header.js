@@ -9,7 +9,7 @@ function Header() {
                 <div className="hamburger-line"></div>
                 <div className="hamburger-line"></div>
             </div>
-            <h3 class='logo-container'> ChordGeo</h3>
+            <h3 class='logo-container'> Intuitune</h3>
             {/* Add header content here */}
         </header>
     )

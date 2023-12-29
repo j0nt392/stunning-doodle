@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-function Sidebar({ settings, onSettingsChange, onCheckBoxChange }) {
+function Sidebar({ settings, onSettingsChange, onCheckBoxChange, progression, onChordClick  }) {
     // State hooks to manage the visibility of each section
     const [isCircleSettingsVisible, setIsCircleSettingsVisible] = useState(true);
     const [isScalesModesVisible, setIsScalesModesVisible] = useState(true);
+    const [isProgressionsVisible, setIsProgressionsVisible] = useState(true);
 
     // Toggle functions for each section
     const toggleCircleSettingsVisibility = () => {
@@ -17,23 +18,21 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange }) {
         setIsScalesModesVisible(!isScalesModesVisible);
     };
 
-    const handleCheckBoxChange = (e) => {
-        console.log('Checkbox checked:', e.target.checked); // Debugging line
-        onCheckBoxChange(e.target.checked);
+    const toggleProgressionsVisibility = () => {
+        setIsProgressionsVisible(!isProgressionsVisible)
     }
 
-    const handleCircleColorSchemeChange = (event) => {
-        // Create a synthetic event with the correct target structure
-        const newEvent = {
-            ...event,
-            target: {
-                name: 'circleColorScheme', // This should match the state key in App.js
-                value: event.target.value, // Get the selected value from the event
-                type: event.target.type // Get the type from the event
-            }
-        };
-        onSettingsChange(newEvent);
-    }
+    const handleCheckBoxChange = (e) => {
+        onSettingsChange(e.target.name, e.target.checked);
+
+    };
+
+    const handleColorSchemeChange = (event) => {
+        onSettingsChange(event.target.name, event.target.value);
+        console.log(event.target.name)
+        console.log(event.target.value)
+    };
+    
 
     return (
         <aside className="sidebar">
@@ -71,7 +70,8 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange }) {
                             <input 
                                 type="checkbox" 
                                 id="store-shapes" 
-                                name="store-shapes" 
+                                name="storeShapes" 
+                                checked = {settings.storeShapes}
                                 onChange={handleCheckBoxChange}/>
                             <label htmlFor="store-shapes">Store shapes</label>
                         </div>
@@ -80,22 +80,25 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange }) {
                                 id="dottedLines" 
                                 name="dottedLines"
                                 checked = {settings.dottedLines}
-                                onChange = {onSettingsChange} />
+                                onChange = {handleCheckBoxChange} />
                             <label htmlFor="dotted-lines">Dotted lines</label>
                         </div>                    
-                            <label htmlFor="shape-color-scheme">Shapes</label>
-                            <select id="shape-color-scheme">
+                            <label htmlFor="shapeColorScheme">Chord colors</label>
+                            <select id="shapeColorScheme"
+                                    name="shapeColorScheme"
+                                    value={settings.shapeColorScheme}
+                                    onChange={handleColorSchemeChange}>
                                 <option>Choose color scheme</option>
-                                <option value="distinct">Distinct Colors</option>
-                                <option value="shaperainbow">Rainbow</option>
+                                <option value="monochrome">Monochrome</option>
+                                <option value="rainbow">Rainbow</option>
                                 <option value="theoretic">Theoretic</option>
                             </select>
-                            <label htmlFor="circle-color-scheme">Circle Color Scheme</label>
+                            <label htmlFor="circle-color-scheme">Circle Color</label>
                             <select 
                                 id="circleColorScheme"
                                 name="circleColorScheme"
-                                value={settings.circleColorScheme}
-                                onChange={handleCircleColorSchemeChange}>
+                                value={settings.circleColorScheme }
+                                onChange={handleColorSchemeChange}>
                                 <option value="monochrome">Monochrome</option>
                                 <option value="rainbow">Rainbow</option>
                                 <option value="theoretic">Theoretic</option>
@@ -125,6 +128,34 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange }) {
                         </select>
                     </div>
                 )}
+            </div>
+
+            <div className="collapsible-section">
+                <h2 className="collapsible-header" onClick={toggleProgressionsVisibility}>
+                    Your chords
+                </h2>
+                {isProgressionsVisible && (
+                <div className="progression-container">
+                    {progression.map((chord, index) => (
+                    <span 
+                        key={index} 
+                        className="progression-chord" 
+                        onClick={() => onChordClick(chord)}
+                    >
+                        {chord}   
+                    </span>
+                    ))}
+                </div>
+                )}
+            </div>
+            <div className="collapsible-section">
+                <h2 className="collabsible-header">
+                    Tutorial
+                </h2>
+                <div className="tutorial-container">
+                    <span>
+                    </span>
+                </div>
             </div>
         </aside>
     );

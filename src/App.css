@@ -21,8 +21,6 @@ body {
 .sidebar{
   height: calc(100vh - 60px);
   position: fixed;
-  top: 60px;
-  overflow-y: auto;
   width: 25%;
 }
 
@@ -30,6 +28,7 @@ body {
   background: white;
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin-left: 25%;
@@ -37,6 +36,7 @@ body {
   width: 75%;
   position: relative;
 }
+
 
 .chord-name{
   position: absolute;
@@ -47,27 +47,67 @@ body {
 
 }
 
-.record-button{
+.bottom-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  
-  bottom: 50px;
-  /* left: 10px; */
+  bottom: 20px;
+  left: -60px;
+  right: 0;
+}
+
+.record-button, .play-button {
   border-radius: 50%;
   width: 50px;
   height: 50px;
-  color: #E64C4C;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
+  border: none;
+  padding: 20px;
+  font-size: 24px; /* This should be adjusted if the icon still looks squished */
   cursor: pointer;
-  border-width: 1px;
-    box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
-
+  background-color: #E64C4C; /* Adjust the color for play button if needed */
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0 10px; /* Adjust spacing around the buttons */
 }
 
-.record-button:hover {
-  /* Styles for hover state */
-  background-color: #c00;
+.wavesurfer {
+  display: flex;
+  max-width: 200px;
+  height: 150px;
+  width: 100%;
+  flex-direction: row; /* Align children in a row */
+  align-items: center;
+  gap: 10px;
+}
+.waveform-container {
+  flex-grow: 1; /* Allow the waveform to take up the remaining space */
+  height: 150px;
+  background-color: #f3f3f3;
 }
 
+.drawing-controls{
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  top: 80px;
+  left: 10px;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.control-btn{
+  padding: 5px 10px;
+  cursor: pointer;
+  border: 1px solid black;
+  border-radius: 4px;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.pencil-cursor {
+  cursor: crosshair; /* Or 'copy', 'alias', etc., based on your preference */
+}
