@@ -65,6 +65,7 @@ function App() {
         [name]: value,
     }));
   };
+  
   const handleDrawingControls = () => {
     handleSettingsChange('isDrawing', !settings.isDrawing);
     console.log(settings.isDrawing);
@@ -108,13 +109,15 @@ function App() {
     circleColorScheme: 'monochrome',
     storeShapes: false,
     shapeColorScheme: 'monochrome',
-    isDrawing: false
+    isDrawing: false,
+    key: '',
+    mode: ''
   });
 
   const handleSettingsChange = (name, value) => {
     setSettings(prevSettings => {
         const newSettings = { ...prevSettings, [name]: value };
-        console.log("New settings:", newSettings); // Debugging line
+        //console.log("New settings:", newSettings); // Debugging line
         return newSettings;
     });
 };

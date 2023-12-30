@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {select, mouse} from 'd3';
 import * as d3 from 'd3';
 import './ChordCircle.css';
 
@@ -9,244 +8,154 @@ const getNotes = (enharmonic) => {
     : ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 };
 
-// Updated function to use the new circle color setting
+const scaleIntervals = {
+  "Ionian": [2, 2, 1, 2, 2, 2, 1],      // Major scale
+  "Dorian": [2, 1, 2, 2, 2, 1, 2],
+  "Phrygian": [1, 2, 2, 2, 1, 2, 2],
+  "Lydian": [2, 2, 2, 1, 2, 2, 1],
+  "Mixolydian": [2, 2, 1, 2, 2, 1, 2],
+  "Aeolian": [2, 1, 2, 2, 1, 2, 2],     // Natural minor scale
+  "Locrian": [1, 2, 2, 1, 2, 2, 2]
+  // You can define additional modes and their intervals here
+};
+
 const getColorForNoteIndex = (index, total, colorScheme) => {
   switch (colorScheme) {
     case 'rainbow':
-      const hue = (index / total) * 360 ;
+      const hue = (index / total) * 360;
       return d3.hsl(hue, 1, 0.5).toString();
-
     case 'monochrome':
-      return 'black'; // or any default color for monochrome
-
+      return 'black';
     default:
-      return 'black'; // Fallback color
+      return 'black';
   }
 };
 
 function ChordCircle({ settings, receivedNotes }) {
   const svgRef = useRef(null);
-  // const [notes, setNotes] = useState([]);
   const notes = getNotes(settings.enharmonic);
-  const [userChords, setUserChords] = useState([]);
-  const [userChordsIndex, setUserChordsIndex] = useState(0);
+  const [userChord, setUserChord] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
 
-  const drawChords = (chordNotes, index) => {
-      const svg = d3.select(svgRef.current);
-      const width = 300;
-      const height = 300;
-      const radius = Math.min(width, height) / 2;
-      const chordGroups = receivedNotes.map((_,index) => `chord-group-${index}`);
-      let colorScale;
-      if (settings.shapeColorScheme === 'rainbow') {
-        colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(receivedNotes.map((_, index) => index));
-      } else {
-        colorScale = () => 'black'; // Default color for other options
-      }
-
-      // Function to update the line styles
-      const updateLineStyles = () => {
-        svg.selectAll('[class^="chord-group-"] path')
-          .attr('stroke-dasharray', settings.dottedLines ? '4 4' : 'none');
-      };
-
-            // Clear the SVG content only when 'storeShapes' is false
-      if (!settings.storeShapes) {
-        svg.selectAll("*").remove();
-      }
-      updateLineStyles();
-
-      // Function to calculate the position of each note on the circle's circumference
-      const calculateNotePosition = (note, radiusScale = 1) => {
-        const index = notes.indexOf(note);
-        const angle = (index * (2 * Math.PI / notes.length)) - Math.PI / 2;
-        return {
-          x: (radius * radiusScale) * Math.cos(angle),
-          y: (radius * radiusScale) * Math.sin(angle)
-        };
-      };
-
-      // Create a separate group for each chord if not exists.
-      let chordGroup = svg.select(`.chord-group-${index}`);
-      if (chordGroup.empty()) {
-        chordGroup = svg.append('g').attr('class', `chord-group-${index}`);
-        chordGroup.attr('transform', `translate(${width / 2}, ${height / 2})`);
-      }
-
-      // Define the line generator with a scaled radius
-      const lineGenerator = d3.line()
-        .x(d => calculateNotePosition(d, 0.90).x) // Use a scale factor less than 1
-        .y(d => calculateNotePosition(d, 0.90).y); // to keep the chord lines inside the circle
-
-      if (chordNotes && chordNotes.length > 0) {
-        // Close the path by connecting the last note to the first
-        const closedNotes = [...chordNotes, chordNotes[0]];
-        //Assign a unique color from the color scale
-        const uniqueColor = colorScale(index); // Get color from colorScale
-        // Create a separate path for each chord shape
-        const path = chordGroup.append('path')
-          .data([closedNotes])
-          .attr('d', lineGenerator)
-          .attr('class', `chord-line chord-group-${index}`)
-          .attr('fill', 'none') //put for example unique here to fill in the shapes. 
-          .attr('stroke', uniqueColor)
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', settings.dottedLines ? '4 4' : '')
-          .on('mouseover', function() {
-            d3.select(this).attr('stroke', 'blue').raise();
-            })
-          .on('mouseout', function() {
-            d3.select(this).attr('stroke', uniqueColor)
-          });
-      }
+  const calculateNotePosition = (note, radiusScale = 1) => {
+    const index = notes.indexOf(note);
+    const angle = (index * (2 * Math.PI / notes.length)) - Math.PI / 2;
+    return {
+      x: (265 / 2 * radiusScale) * Math.cos(angle),
+      y: (265 / 2 * radiusScale) * Math.sin(angle)
+    };
   };
 
-  useEffect(() => {
-    if (userChords.length > 0) {
-      // Here, you might want to use a different index or logic to differentiate
-      // user chords from received chords.
-      drawChords(userChords, userChordsIndex);
-    }
-  }, [userChords, userChordsIndex]);
+  const calculateScaleNotes = (rootNote, selectedMode) => {
+    const intervals = scaleIntervals[selectedMode];
+    const allNotes = getNotes(settings.enharmonic); // Get all notes based on enharmonic settings
+    const notes = [rootNote];
+    let currentNoteIndex = allNotes.findIndex(note => note === rootNote);
+    
+    intervals.forEach(interval => {
+      currentNoteIndex += interval;
+      if (currentNoteIndex >= allNotes.length) {
+        currentNoteIndex -= allNotes.length;
+      }
+      notes.push(allNotes[currentNoteIndex]);
+    });
+    
+    return notes;
+  };
+  
 
-  // useEffect(() => {
-  //   setNotes(getNotes(settings.enharmonic));
-  // }, [settings.enharmonic]);
+  const drawChords = (chordNotes, index) => {
+    const svg = d3.select(svgRef.current);
+    let chordGroup = svg.select(`.chord-group-${index}`);
+    console.log(chordNotes);
+    if (chordGroup.empty()) {
+      chordGroup = svg.append('g').attr('class', `chord-group-${index}`);
+      chordGroup.attr('transform', `translate(150, 150)`); // center of the svg
+    }
+  
+    const lineGenerator = d3.line()
+      .x(d => calculateNotePosition(d).x)
+      .y(d => calculateNotePosition(d).y)
+      .curve(d3.curveLinear);
+  
+    if (chordNotes && chordNotes.length > 0) {
+      const closedNotes = [...chordNotes, chordNotes[0]];
+      const uniqueColor = getColorForNoteIndex(index, chordNotes.length, settings.shapeColorScheme);
+  
+      chordGroup.append('path')
+        .data([closedNotes])
+        .attr('d', lineGenerator)
+        .attr('fill', 'none')
+        .attr('stroke', uniqueColor)
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', settings.dottedLines ? '4,4' : 'none'); // Adjusting for dotted lines
+    }
+  };
+
+  const drawCustomChord = (event) => {
+    setIsDrawing(true);
+    const noteText = d3.select(event.target).text();
+    const notelabel = d3.select(event.target);
+
+    setUserChord(prevChord => {
+      const updatedChord = [...prevChord, noteText];
+      console.log(updatedChord);
+      if (updatedChord.length > 2 && updatedChord[0] === updatedChord[updatedChord.length -1]) {
+        drawChords(updatedChord, updatedChord.length); // Call drawChords with the new chord
+        setIsDrawing(false);
+        return []; // Reset the chord for new input
+      }
+
+      return updatedChord; // Update the chord with the new note
+    });
+  };
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     const width = 300;
     const height = 300;
     const radius = Math.min(width, height) / 2;
-    const chordGroups = receivedNotes.map((_,index) => `chord-group-${index}`);
-    let colorScale;
-    if (settings.shapeColorScheme === 'rainbow') {
-      colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(receivedNotes.map((_, index) => index));
-    } else {
-      colorScale = () => 'black'; // Default color for other options
-    }
+    console.log("Key:", settings.key);
+    console.log("Mode:", settings.mode);
 
-    // Function to update the line styles
-    const updateLineStyles = () => {
-      svg.selectAll('[class^="chord-group-"] path')
-        .attr('stroke-dasharray', settings.dottedLines ? '4 4' : 'none');
-    };
-
-    // Clear the SVG content only when 'storeShapes' is false
-    if (!settings.storeShapes) {
+    if (!settings.storeShapes && !setIsDrawing) {
       svg.selectAll("*").remove();
     }
-    updateLineStyles();
 
-    // Function to calculate the position of each note on the circle's circumference
-    const calculateNotePosition = (note, radiusScale = 1) => {
-      const index = notes.indexOf(note);
-      const angle = (index * (2 * Math.PI / notes.length)) - Math.PI / 2;
-      return {
-        x: (radius * radiusScale) * Math.cos(angle),
-        y: (radius * radiusScale) * Math.sin(angle)
-      };
-    };
-
-    function drawLine(event) {
-      // Get the clicked text element and its note text
-      const textElement = d3.select(event.target);
-      const noteText = textElement.text();
-    
-      // Log the clicked note for debugging
-      console.log("Clicked note:", noteText);
-    
-      // Change the color of the clicked note
-      textElement.style("fill", "red");
-    
-      // For now, let's just log the note and not worry about state updates
-      // You can later add logic to manage the user chords
+    if (settings.key && settings.mode){
+      const scaleNotes = calculateScaleNotes(settings.key, settings.mode);
+      //svg.selectAll("*").remove();
+      drawChords(scaleNotes);
+      console.log(scaleNotes);
     }
 
-    function isChordComplete(chords) {
-      // Return true if the length of the chords array is 3
-      // indicating that three notes have been selected, completing a chord
-      if (chords.length === 3) {
-        console.log(chords.length);
-        return true;
-      }
-    
-      // You can add more conditions here if needed
-    
-      // Return false if the chord is not complete
-      return false;
-    }
-    
-    // Draw lines for each set of received notes
-    receivedNotes.forEach((receivedNotesSet, index) => {
-
-      // Create a separate group for each chord if not exists.
-      let chordGroup = svg.select(`.chord-group-${index}`);
-      if (chordGroup.empty()) {
-        chordGroup = svg.append('g').attr('class', `chord-group-${index}`);
-        chordGroup.attr('transform', `translate(${width / 2}, ${height / 2})`);
-      }
-
-      // Define the line generator with a scaled radius
-      const lineGenerator = d3.line()
-        .x(d => calculateNotePosition(d, 0.90).x) // Use a scale factor less than 1
-        .y(d => calculateNotePosition(d, 0.90).y); // to keep the chord lines inside the circle
-
-      if (receivedNotesSet && receivedNotesSet.length > 0) {
-        // Close the path by connecting the last note to the first
-        const closedNotes = [...receivedNotesSet, receivedNotesSet[0]];
-        //Assign a unique color from the color scale
-        const uniqueColor = colorScale(index); // Get color from colorScale
-        // Create a separate path for each chord shape
-        const path = chordGroup.append('path')
-          .data([closedNotes])
-          .attr('d', lineGenerator)
-          .attr('class', `chord-line chord-group-${index}`)
-          .attr('fill', 'none') //put for example unique here to fill in the shapes. 
-          .attr('stroke', uniqueColor)
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', settings.dottedLines ? '4 4' : '')
-          .on('mouseover', function() {
-            d3.select(this).attr('stroke', 'blue').raise();
-            })
-          .on('mouseout', function() {
-            d3.select(this).attr('stroke', uniqueColor)
-          });
-      }
-    });
-
-    // Draw the circle's segments and labels
     const segmentGroup = svg.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
     notes.forEach((note, index) => {
       const position = calculateNotePosition(note);
       segmentGroup.append("text")
-        .attr("x", position.x)
-        .attr("y", position.y)
+        .attr("x", position.x * 1.15)
+        .attr("y", position.y * 1.15)
         .attr("dy", "0.35em")
         .attr("text-anchor", "middle")
         .text(note)
-        .on("mousedown", drawLine);
+        .on("mousedown", drawCustomChord);
 
-      const startAngle = (index * (2 * Math.PI / notes.length)) - Math.PI / 2 - 50;
-      const endAngle = ((index + 1) * (2 * Math.PI / notes.length)) - Math.PI / 2 - 50;
+      const startAngle = (index * (2 * Math.PI / notes.length)) - Math.PI / 2 -50;
+      const endAngle = ((index + 1) * (2 * Math.PI / notes.length)) - Math.PI / 2 -50;
       const arc = d3.arc().innerRadius(radius - 15).outerRadius(radius - 15).startAngle(startAngle).endAngle(endAngle);
       segmentGroup.append("path")
         .attr("d", arc)
         .attr("fill", "none")
         .attr("stroke", getColorForNoteIndex(index, notes.length, settings.circleColorScheme))
-        .attr("stroke-width", "2")
-        .on('mousedown', drawLine);
+        .attr("stroke-width", "2");
     });
 
-  }, [notes, settings, receivedNotes]);
+    receivedNotes.forEach((notesSet, index) => drawChords(notesSet, index));
+  }, [notes, settings, receivedNotes, isDrawing]);
 
   return (
     <div className="chord-circle-container">
-      <svg 
-      className={`chord-circle-container svg ${settings.isDrawing ? 'crosshair-cursor' : ''}`}
-      ref={svgRef} 
-      width="300" 
-      height="300" />
+      <svg ref={svgRef} width="300" height="300" className={`chord-circle-container svg ${settings.isDrawing ? 'crosshair-cursor' : ''}`}></svg>
     </div>
   );
 }

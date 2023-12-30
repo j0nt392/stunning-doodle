@@ -24,21 +24,21 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange, progression, on
 
     const handleCheckBoxChange = (e) => {
         onSettingsChange(e.target.name, e.target.checked);
-
     };
 
     const handleColorSchemeChange = (event) => {
         onSettingsChange(event.target.name, event.target.value);
-        console.log(event.target.name)
-        console.log(event.target.value)
     };
-    
+
+    const handleKeyChange = (event) => {
+        onSettingsChange(event.target.name, event.target.value);
+    };
 
     return (
         <aside className="sidebar">
             <div className="collapsible-section">
                 <h2 className="collapsible-header" onClick={toggleCircleSettingsVisibility}>
-                    Circle settings
+                    Settings
                 </h2>
                 {isCircleSettingsVisible && (
                     <div className="circle-settings-grid">
@@ -109,22 +109,41 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange, progression, on
 
             <div className="collapsible-section">
                 <h2 className="collapsible-header" onClick={toggleScalesModesVisibility}>
-                    Scales and modes
+                    Modes
                 </h2>
                 {isScalesModesVisible && (
                     <div className="Theory-grid">
-                        <select className="Keys">
+                        <select 
+                            className="Keys"
+                            name="key"
+                            value={settings.key}
+                            onChange={handleKeyChange}>
                             <option value="">--Select a key--</option>
-                            <option value="Cmajor">--Cmajor--</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="Eb">Eb</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="Gb">Gb</option>
+                            <option value="G">G</option>
+                            <option value="Ab">Ab</option>
+                            <option value="A">A</option>
+                            <option value="Bb">Bb</option>
+                            <option value="B">B</option>
                         </select>
-                        <select className="Modes">
+                        <select 
+                            className="Modes"
+                            name="mode"
+                            value={settings.mode}
+                            onChange={handleKeyChange}>
                             <option value="">--Select a mode--</option>
-                            <option value="Aeolian">--Aeolian--</option>
-                            <option value="Aeolian">--Dorian--</option>
-                            <option value="Aeolian">--Locrian--</option>
-                            <option value="Aeolian">--Ionian--</option>
-                            <option value="Aeolian">--Phrygian--</option>
-                            <option value="Aeolian">--Select a mode--</option>
+                            <option value="Ionian">Ionian</option>
+                            <option value="Dorian">Dorian</option>
+                            <option value="Phrygian">Phrygian</option>
+                            <option value="Lydian">Lydian</option>
+                            <option value="Mixolydian">Mixolydian</option>
+                            <option value="Aeolian">Aeolian</option>
+                            <option value="Locrian">Locrian</option>
                         </select>
                     </div>
                 )}
