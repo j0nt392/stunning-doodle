@@ -1,10 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
+
 body {
   font-family: 'Lato', sans-serif;
   font-weight:300;
   font-style: light;
   filter: contrast(110%);
+}
+.arc-segment:hover {
+  fill: grey !important; /* Use !important to override any inline styles */
+}
+.chord-circle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%; /* Adjust based on your layout */
 }
 
 .App{

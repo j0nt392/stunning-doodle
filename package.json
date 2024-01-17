@@ -10,6 +10,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "audiobuffer-to-wav": "^1.0.0",
+    "aws-sdk": "^2.1536.0",
     "axios": "^1.6.2",
     "d3": "^7.8.5",
     "react": "^18.2.0",
@@ -17,7 +18,7 @@
     "react-scripts": "5.0.1",
     "react-wavesurfer.js": "^0.0.8",
     "standardized-audio-context": "^25.3.59",
-    "wavesurfer.js": "^7.5.2",
+    "wavesurfer.js": "^6.6.4",
     "web-vitals": "^2.1.4",
     "webm-to-wav-converter": "^1.1.0",
     "xhr": "^2.6.0"

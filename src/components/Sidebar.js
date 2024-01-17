@@ -34,6 +34,10 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange, progression, on
         onSettingsChange(event.target.name, event.target.value);
     };
 
+    const handleCircleType = (event) => {
+        onSettingsChange(event.target.name, event.target.value);
+    }
+
     return (
         <aside className="sidebar">
             <div className="collapsible-section">
@@ -42,10 +46,15 @@ function Sidebar({ settings, onSettingsChange, onCheckBoxChange, progression, on
                 </h2>
                 {isCircleSettingsVisible && (
                     <div className="circle-settings-grid">
-                            <select className="circle-select">
+                            <select 
+                                id="circletype"
+                                name="circleType"
+                                value={settings.circleType}
+                                onChange={handleCircleType}
+                                className="circle-select">
                                 <option value="Chromatic circle">Chromatic circle</option>
                                 <option value="Circle of fifths">Circle of fifths</option>
-                                <option value="Circle of fifhts(Modal substitutions)">Modal substitutions</option>
+                                <option value="Full circle of fifths">Full circle of fifths</option>
                                 <option value="Coltrane circle">Coltrane circle</option>
                             </select>
                         <div>
