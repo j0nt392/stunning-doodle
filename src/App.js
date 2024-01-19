@@ -9,13 +9,11 @@ import FullCircleOfFifths from './components/FullCircleOfFifths';
 import AWS from 'aws-sdk';
 import './App.css';
 
-AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-
+// AWS.config.update({
+//   region: process.env.AWS_REGION,
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+// });
 
 function App() {
   const mediaRecorder = useRef(null);
@@ -35,7 +33,7 @@ function App() {
     formData.append('audio', audioBlob, 'recording.webm');
 
     try {
-      const response = await fetch('http://localhost:5000/audio', {
+      const response = await fetch('http://16.171.170.11/api/audio', {
         method: 'POST',
         body: formData,
       });
@@ -61,22 +59,22 @@ function App() {
     }
   };
   
-  const uploadAudioToS3 = async (audioBlob) => {
-    const s3 = new AWS.S3();
-    const params = {
-      Bucket: 'intuitune-chords',
-      Key: `audio-${Date.now()}.webm`, // Unique key for each audio file
-      Body: audioBlob,
-      ContentType: 'audio/webm',
-    };
+  // // const uploadAudioToS3 = async (audioBlob) => {
+  // //   const s3 = new AWS.S3();
+  // //   const params = {
+  // //     Bucket: 'intuitune-chords',
+  // //     Key: `audio-${Date.now()}.webm`, // Unique key for each audio file
+  // //     Body: audioBlob,
+  // //     ContentType: 'audio/webm',
+  // //   };
   
-    try {
-      await s3.upload(params).promise();
-      console.log('Audio uploaded successfully to S3');
-    } catch (error) {
-      console.error('Error uploading audio to S3:', error);
-    }
-  };
+  //   try {
+  //     await s3.upload(params).promise();
+  //     console.log('Audio uploaded successfully to S3');
+  //   } catch (error) {
+  //     console.error('Error uploading audio to S3:', error);
+  //   }
+  // };
   
 
   // Function to add a new chord to the progression
@@ -121,7 +119,7 @@ function App() {
 
         setAudioUrl(url);
 
-        await uploadAudioToS3(audioBlob);
+        await sendAudioToServer(audioBlob);
       };
 
       mediaRecorder.current.start();
@@ -185,11 +183,12 @@ useEffect(() => {
     circle.draw(svgRef.current);
 
     if(settings.dottedLines === true){
-      circle.drawChordLines(svgRef.current, [], true, settings.shapeColorScheme);
+      circle.drawChordLines(svgRef.current, allReceivedNotes[0], true, settings.shapeColorScheme);
       console.log(settings.shapeColorScheme);
     }else{
-      circle.drawChordLines(svgRef.current, ['A','B','C'], false, settings.shapeColorScheme);
+      circle.drawChordLines(svgRef.current, allReceivedNotes[0], false, settings.shapeColorScheme);
     }
+    console.log(allReceivedNotes)
 
     if(settings.key && settings.mode){
       const notes = circle.drawModes(settings.key, settings.mode)
