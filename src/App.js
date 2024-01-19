@@ -183,10 +183,10 @@ useEffect(() => {
     circle.draw(svgRef.current);
 
     if(settings.dottedLines === true){
-      circle.drawChordLines(svgRef.current, allReceivedNotes[0], true, settings.shapeColorScheme);
+      circle.drawChordLines(svgRef.current, ['C','E','Ab'], true, settings.shapeColorScheme);
       console.log(settings.shapeColorScheme);
     }else{
-      circle.drawChordLines(svgRef.current, allReceivedNotes[0], false, settings.shapeColorScheme);
+      circle.drawChordLines(svgRef.current, ['C','E','Ab'], false, settings.shapeColorScheme);
     }
     console.log(allReceivedNotes)
 
