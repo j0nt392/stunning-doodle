@@ -19,7 +19,7 @@ function App() {
   const mediaRecorder = useRef(null);
   const [audioChunks, setAudioChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [allReceivedNotes, setAllReceivedNotes] = useState(['C', 'E', 'G']);
+  const [allReceivedNotes, setAllReceivedNotes] = useState([['C', 'E', 'G']]);
   const [chord, setChord] = useState("Welcome");
   const [progression, setProgression] = useState([]);
   const [audioUrl, setAudioUrl] = useState(); // URL of the audio file
