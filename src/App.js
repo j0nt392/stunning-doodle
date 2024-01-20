@@ -198,7 +198,7 @@ useEffect(() => {
 
   }
   console.log(allReceivedNotes)
-}, [settings]);
+}, [settings, allReceivedNotes]);
 
   return (
     <div className="App">
