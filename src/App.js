@@ -33,7 +33,7 @@ function App() {
     formData.append('audio', audioBlob, 'recording.webm');
 
     try {
-      const response = await fetch('https://16.171.170.11/audio', {
+      const response = await fetch('http://localhost:5000/audio', {
         method: 'POST',
         body: formData,
       });
@@ -58,24 +58,6 @@ function App() {
       console.error('Failed to send audio to server:', error);
     }
   };
-  
-  // // const uploadAudioToS3 = async (audioBlob) => {
-  // //   const s3 = new AWS.S3();
-  // //   const params = {
-  // //     Bucket: 'intuitune-chords',
-  // //     Key: `audio-${Date.now()}.webm`, // Unique key for each audio file
-  // //     Body: audioBlob,
-  // //     ContentType: 'audio/webm',
-  // //   };
-  
-  //   try {
-  //     await s3.upload(params).promise();
-  //     console.log('Audio uploaded successfully to S3');
-  //   } catch (error) {
-  //     console.error('Error uploading audio to S3:', error);
-  //   }
-  // };
-  
 
   // Function to add a new chord to the progression
   const addChordToProgression = (chordName) => {
@@ -183,10 +165,10 @@ useEffect(() => {
     circle.draw(svgRef.current);
 
     if(settings.dottedLines === true){
-      circle.drawChordLines(svgRef.current, allReceivedNotes[0], true, settings.shapeColorScheme);
+      circle.drawChordLines(svgRef.current, ['C','E','Ab'], true, settings.shapeColorScheme);
       console.log(settings.shapeColorScheme);
     }else{
-      circle.drawChordLines(svgRef.current, allReceivedNotes[0], false, settings.shapeColorScheme);
+      circle.drawChordLines(svgRef.current, ['C','E','Ab'], false, settings.shapeColorScheme);
     }
     console.log(allReceivedNotes)
 
@@ -198,7 +180,7 @@ useEffect(() => {
 
   }
   console.log(allReceivedNotes)
-}, [settings]);
+}, [settings, allReceivedNotes]);
 
   return (
     <div className="App">
