@@ -40,6 +40,7 @@ export default class ChromaticCircle extends MusicalCircle {
         .attr('y', labelY)
         .attr('text-anchor', 'middle')
         .attr('alignment-baseline', 'middle')
+        .attr('fill', '#D1D5DB')
         .text(label);
     });
   }

@@ -1,44 +1,79 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Flask, request
+from flask_socketio import SocketIO
 import os
-import subprocess
 from utils import Chord_classifier, Chord_preprocessing
+import io
+from pydub import AudioSegment
+import soundfile as sf
+
+
+def load_wav_from_bytes(wav_bytes):
+    # Convert bytes to a buffer
+    buffer = io.BytesIO(wav_bytes)
+    
+    # Read the buffer with soundfile
+    data, samplerate = sf.read(buffer)
+    
+    # Now `data` is a NumPy array that you can use with librosa
+    return data, samplerate
+
+# Assuming `audio_bytes` is the variable holding the bytes from the client
+def convert_audio_bytes_to_wav_bytes(audio_bytes):
+    # Load the audio bytes into pydub (this example assumes WebM format)
+    audio_segment = AudioSegment.from_file(io.BytesIO(audio_bytes), format="webm")
+    
+    # Export the audio segment to WAV format in memory
+    buffer = io.BytesIO()
+    audio_segment.export(buffer, format="wav")
+    wav_bytes = buffer.getvalue()
+    
+    return wav_bytes
+
 
 app = Flask(__name__)
-CORS(app)
+app.config['SECRET_KEY'] = 'your_secret_key'
+socketio = SocketIO(app, cors_allowed_origins="*")
 chord_classifier = Chord_classifier()
 preprocessing = Chord_preprocessing()
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory('uploads', filename)
+AUDIO_SAVE_PATH = 'saved_audio'
+if not os.path.exists(AUDIO_SAVE_PATH):
+    os.makedirs(AUDIO_SAVE_PATH)
 
-@app.route('/audio', methods=['POST'])
-def receive_audio():
-    if 'audio' not in request.files:
-        return jsonify({"error": "No audio file in the request"}), 400
+audio_sessions = {}  # Dict to hold audio chunks by session ID
 
-    audio_file = request.files['audio']
+@socketio.on('audio_chunk')
+def handle_audio_chunk(data):
+    session_id = data['session_id']  # Ensure this matches the client's format
+    chunk = data['chunk']
+    print(f"Received chunk for session {session_id}")  # Debugging print
+    if session_id not in audio_sessions:
+        audio_sessions[session_id] = []
+    audio_sessions[session_id].append(chunk)
 
-    uploads_dir = 'uploads'
-    os.makedirs(uploads_dir, exist_ok=True)
-    file_path = os.path.join(uploads_dir, audio_file.filename)
 
-    audio_file.save(file_path)
+@socketio.on('recording_stopped')
+def handle_recording_stopped(data):
+    session_id = data['session_id']
+    print(f"Stopping recording for session {session_id}")  # Debugging print
+    if session_id in audio_sessions:
+        combined_audio = b''.join(audio_sessions[session_id])
+        
+        # Example integration
+        # audio_bytes = combined_audio  # This is your own function to get audio bytes
+        # wav_bytes = convert_audio_bytes_to_wav_bytes(audio_bytes)
+        # audio_data, fs = load_wav_from_bytes(wav_bytes)
 
-    # Convert the audio file to WAV using ffmpeg
-    wav_path = os.path.join(uploads_dir, 'audio.wav')
-    subprocess.run(['ffmpeg', '-y', '-i', file_path, wav_path])
+        # # Use your ML model for prediction
+        # notes, chord = chord_classifier.predict_new_chord(audio_data, fs)
+                
+        # response_data = {
+        #     "notes": notes, 
+        #     "chord": chord,
+        #     "audio": combined_audio
+        # }
+        socketio.emit('complete_recording', combined_audio)
+        del audio_sessions[session_id]
+    else:
+        print(f"Session ID {session_id} not found!")  # Debugging print to identify the issue
 
-    notes, chord = chord_classifier.predict_new_chord('uploads/audio.wav', 44100)
-    chord = chord.tolist()
-
-    data = {
-        "notes": notes, 
-        "chord": chord
-    }
-
-    return data, 200
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=80)

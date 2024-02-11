@@ -1,18 +1,18 @@
-import React from 'react';
-import './Header.css';
+import React from "react";
+import { Link } from "react-router-dom";
+// import './Header.css';
 
 function Header() {
-    return (
-        <header className="header">
-            <div className="hamburger-menu">
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-            </div>
-            <h3 class='logo-container'> Intuitune</h3>
-            {/* Add header content here */}
-        </header>
-    )
+  return (
+    <header className="w-[100%] flex justify-evenly items-center h-20 bg-slate-600 shadow-2xl ">
+        <Link to="/" className="mr-auto ml-5 text-lg">
+          Intuitune
+        </Link>
+        <Link to="/About" className="text-lg mr-5 ">About</Link>
+        <Link to="/Tutorial" className="text-lg ">Tutorial</Link>
+        <a className="text-lg mr-5 ml-5">Profile</a>
+    </header>
+  );
 }
 
 export default Header;

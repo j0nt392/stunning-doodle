@@ -5,11 +5,10 @@ export default class FullCircleOfFifths extends MusicalCircle {
   constructor(radius) {
     super(radius);
     // Define the arrays for each circle
-    this.majorChords = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+    this.labels = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
     this.minorChords = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m', 'A#m', 'Fm', 'Cm', 'Gm', 'Dm'];
     this.diminishedChords = ['B°', 'F#°', 'C#°', 'G#°', 'D#°', 'A#°', 'F°', 'C°', 'G°', 'D°', 'A°', 'E°'];
-    this.modes = ['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'];
-    this.innerRadius = this.radius * 0.5;
+    this.modes = ['Locrian', 'Phrygian', 'Aeolian', 'Dorian', 'Mixolydian', 'Ionian', 'Lydian'];
   }
 
   draw(svgContainer) {
@@ -23,19 +22,115 @@ export default class FullCircleOfFifths extends MusicalCircle {
     // Draw the circles
     this.drawCircle(svgContainer, middleRadius, this.minorChords, "minor");
     this.drawCircle(svgContainer, outerRadius, this.diminishedChords, "diminished");
-    this.drawCircle(svgContainer, innerRadius, this.majorChords, "major");
+    this.drawCircle(svgContainer, innerRadius, this.labels, "major");
     
     // Draw the mode labels around the edge
     this.drawLabels(svgContainer, outerRadius + 20, this.modes, "modes");
-    this.highlightArcs(svgContainer, this.radius, [1, 3], "major");
-    this.highlightArcs(svgContainer, this.radius * 0.5, [1,2,3], "diminished");
-    this.highlightArcs(svgContainer, this.radius * 1.28, [2], "major");
+    //this.highlightArcs(svgContainer, this.radius, [1, 3], "major");
+    //this.highlightArcs(svgContainer, this.radius * 0.5, [1,2,3], "diminished");
+    //this.highlightArcs(svgContainer, this.radius * 1.28, [2], "major");
 
     // Highlight the key of C (or any other key, depending on the input)
     //this.highlightKey(svgContainer, 'C', outerRadius, middleRadius, innerRadius);
   }
 
   drawCircle(svgContainer, radius, labels, className) {
+    const segmentAngle = (2 * Math.PI) / labels.length;
+    const chordRelationships = {
+      'C': ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'B°'],
+      'Db': ['C#', 'D#m', 'Fm', 'Gb', 'Ab', 'A#m', 'C°'],
+      'D': ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#°'],
+      'Eb': ['D#', 'Fm', 'Gm', 'Ab', 'Bb', 'Cm', 'D°'], // D# is enharmonically equivalent to Eb
+      'E': ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#°'],
+      'F': ['F', 'Gm', 'Am', 'Bb', 'C', 'Dm', 'E°'],
+      'Gb': ['Gb', 'G#m', 'A#m', 'B', 'Db', 'D#m', 'F°'],
+      'G': ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#°'],
+      'Ab': ['G#', 'A#m', 'Cm', 'Db', 'Eb', 'Fm', 'G°'], // G# is enharmonically equivalent to Ab
+      'A': ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#°'],
+      'Bb': ['A#', 'Cm', 'Dm', 'Eb', 'F', 'Gm', 'A°'], // A# is enharmonically equivalent to Bb
+      'B': ['B', 'C#m', 'D#m', 'E', 'Gb', 'G#m', 'A#°']
+    };
+
+    // Create an arc generator
+    const arc = d3.arc()
+      .innerRadius(radius - 38) // Inner radius of segment, adjust as needed
+      .outerRadius(radius + 20); // Outer radius of segment, adjust as needed
+  
+    const svg = d3.select(svgContainer);
+  
+    // Bind the labels data to groups
+    const groups = svg.selectAll(`.${className}-group`)
+      .data(labels)
+      .enter()
+      .append('g')
+      .attr('class', `${className}-group`)
+      .attr('transform', `translate(${this.centerX}, ${this.centerY})`)
+      .attr('id', d => `${className}-${d.replace('#', 'sharp')}`); // Replace '#' with 'sharp' to ensure valid IDs
+  
+    // Append the arc path to each group
+    groups.each(function(d, i) {
+      // Calculate start and end angles for this segment
+      const startAngle = i * segmentAngle + 50; // Adjust the start angle as needed
+      const endAngle = (i + 1) * segmentAngle + 50; // Adjust the end angle as needed
+  
+      // Draw the arc for this segment
+      d3.select(this).append('path')
+        .attr("id", "wavy") //Unique id of the path
+
+        .attr("d", "M 10,90 Q 100,15 200,70 Q 340,140 400,30") //SVG path
+        .attr('d', arc.startAngle(startAngle).endAngle(endAngle))
+        .attr('fill', '#CDD3D0') // Default fill color, can be changed with CSS
+        .attr('stroke', 'black');
+  
+      // Calculate label position for this chord
+      const angle = i * segmentAngle - Math.PI / 2; // Adjust the angle for the label
+      const labelRadius = radius - 10; // Adjust the label radius as necessary
+  
+      const labelX = labelRadius * Math.cos(angle);
+      const labelY = labelRadius * Math.sin(angle);
+  
+      // Append the text label for this chord
+      d3.select(this).append('text')
+        .attr('x', labelX)
+        .attr('y', labelY)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .text(d) // Only the current label, not all labels
+        .attr('class', `${className}-label`);
+    });
+  
+  // Add hover effects to the group, not the individual elements
+  groups.on('mouseenter', function(event, d) {
+    // Highlight this group
+    d3.select(this).select('path').attr('fill', '#386E90'); // Change color on hover
+    
+    // Get related chords based on the key
+    // Get related chords based on the key
+    const relatedChords = chordRelationships[d];
+    if (relatedChords) {
+      relatedChords.forEach(chord => {
+        // Highlight the related chords across all groups (major, minor, diminished)
+        svg.selectAll('text').each(function() {
+          const textElement = d3.select(this);
+          if (relatedChords.includes(textElement.text())) {
+            // Find the parent group and select the path to change its fill
+            const parentGroup = textElement.node().parentNode;
+            d3.select(parentGroup).select('path').attr('fill', '#386E90');
+          }
+        });
+      });
+    }
+  })
+  .on('mouseleave', function(event, d) {
+    // Remove hover effect from all chords
+    svg.selectAll('path').attr('fill', '#CDD3D0');
+  });
+
+  // Assuming you have a `ref` to your SVG element
+
+  }
+  
+  olddrawCircle(svgContainer, radius, labels, className) {
     const segmentAngle = (2 * Math.PI) / labels.length;
     // Define which indices should be red for each class
     const redIndices = {
@@ -113,8 +208,23 @@ export default class FullCircleOfFifths extends MusicalCircle {
   }
 
   drawLabels(svgContainer, radius, labels, className) {
-    // Logic to draw the labels around the circle
-    // ...
+    
+    const svg = d3.select(svgContainer)
+    labels.forEach((mode, index) => {
+      const angle = (index * 360 / 12) - 240; 
+      const radian = (angle * Math.PI) / 180;
+      const x = this.centerX + radius * Math.cos(radian);
+      const y = this.centerY + radius * Math.sin(radian);
+  
+      svg.append("text")
+      .attr("x", x)
+      .attr('font-size', '1.2rem')
+      .attr("y", y - 10)
+      .attr("text-anchor", "middle")
+      .attr('transform', `rotate(${angle + 90}, ${x},${y})`)
+      .attr('fill', '#CDD3D0')
+      .text(mode);
+  });
   }
 
   highlightArcs(svgContainer, radius, startIndices, className) {
@@ -145,47 +255,4 @@ export default class FullCircleOfFifths extends MusicalCircle {
         .attr('transform', `translate(${this.centerX}, ${this.centerY})`);
     });
   }
-
-  getNoteAngle(note) {
-    const index = this.majorChords.indexOf(note);
-    if (index === -1) {
-      return null; // Note not found in the labels array
-    }
-    const segmentAngle = (2 * Math.PI) / this.majorChords.length;
-    return segmentAngle * index - Math.PI / 2; // Offset by 90 degrees to start from the top
-  }
-  
-  drawChordLines(svgContainer, chordNotes, style) {
-    const radius = this.innerRadius; // Use the inner radius for the lines
-    const center = { x: this.centerX, y: this.centerY };
-  
-    // Loop through the chord notes and draw lines between consecutive notes
-    chordNotes.forEach((note, i) => {
-      // Get the start angle for the current note
-      const startAngle = super.getNoteAngle(note);
-  
-      // Get the end angle for the next note, wrapping around to the first note
-      const nextNote = chordNotes[(i + 1) % chordNotes.length];
-      const endAngle = super.getNoteAngle(nextNote);
-  
-      // Skip if the note is not found
-      if (startAngle == null || endAngle == null) return;
-  
-      const startX = center.x + radius * Math.cos(startAngle);
-      const startY = center.y + radius * Math.sin(startAngle);
-      const endX = center.x + radius * Math.cos(endAngle);
-      const endY = center.y + radius * Math.sin(endAngle);
-  
-      // Draw the line
-      d3.select(svgContainer)
-        .append('line')
-        .attr('x1', startX)
-        .attr('y1', startY)
-        .attr('x2', endX)
-        .attr('y2', endY)
-        .attr('stroke', 'black') // or any color you wish to use
-        .attr('stroke-dasharray', style ? '4,4' : 'none') // Adjusting for dotted lines
-        .attr('stroke-width', 2); // adjust the width as necessary
-    });
-  }  
 }

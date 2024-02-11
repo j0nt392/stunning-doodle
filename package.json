@@ -13,14 +13,20 @@
     "aws-sdk": "^2.1536.0",
     "axios": "^1.6.2",
     "d3": "^7.8.5",
+    "ffmpeg.js": "^4.2.9003",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
     "react-scripts": "5.0.1",
     "react-wavesurfer.js": "^0.0.8",
+    "socket.io-client": "^4.7.4",
     "standardized-audio-context": "^25.3.59",
+    "tone": "^14.7.77",
     "wavesurfer.js": "^6.6.4",
+    "web-midi-api": "^2.2.8",
     "web-vitals": "^2.1.4",
     "webm-to-wav-converter": "^1.1.0",
+    "whammy": "^0.0.1",
     "xhr": "^2.6.0"
   },
   "scripts": {
@@ -46,5 +52,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
   }
 }

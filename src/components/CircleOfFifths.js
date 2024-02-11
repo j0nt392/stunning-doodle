@@ -43,6 +43,7 @@ export default class CircleOfFifths extends MusicalCircle {
         .append('text')
         .attr('x', labelX)
         .attr('y', labelY)
+        .attr('fill', '#D1D5DB')
         .attr('text-anchor', 'middle')
         .attr('alignment-baseline', 'middle')
         .text(label);

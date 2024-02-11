@@ -42,7 +42,7 @@ const DefaultWaveform = ({ audioUrl }) => {
       <button className="playbutton" onClick={handlePlayPause}>
       {isPlaying ? <i className="fa fa-pause"></i> : <i className="fa fa-play"></i>}
       </button>
-      <div ref={waveformRef} style={{ width: '100%', height: '150px', backgroundColor: '#f3f3f3' }}></div>
+      <div ref={waveformRef} style={{ width: '100px', height: '150px', backgroundColor: '#f3f3f3' }}></div>
     </div>
   );
 };

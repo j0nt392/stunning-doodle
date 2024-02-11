@@ -7,6 +7,7 @@ export default class MusicalCircle {
     this.centerY = radius; // Assuming the SVG will be twice the radius
     this.segmentColors = []; // Placeholder for colors
     this.labels = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
   }
 
   setSegmentColors(colors) {
@@ -16,6 +17,9 @@ export default class MusicalCircle {
       throw new Error("Segment colors array does not match label length.");
     }
   }
+  
+  // Similarly, you might have setMinorSegmentColors and setDiminishedSegmentColors
+  
 
   clear(svgContainer) {
     d3.select(svgContainer).selectAll('*').remove(); // Clear previous drawing
@@ -44,14 +48,17 @@ export default class MusicalCircle {
         console.log(hue);
         return d3.hsl(hue, 2, 2.5).toString();
       case 'monochrome':
-        return 'black';
+        return '#7986cb';
       default:
-        return 'black';
+        return '#7986cb';
     }
   }
 
-  drawChordLines(svgContainer, chordNotes, style, shapeColorScheme) {
-    const radius = this.radius; // Use the outermost radius for the lines
+  drawChordLines(svgContainer, chordNotes, style, shapeColorScheme, size) {
+    let radius = this.radius;
+    if(size === 'small'){
+      radius = radius * 0.335;
+    };
     const center = { x: this.centerX, y: this.centerY };
   
     // Create a group element for the chord
@@ -86,7 +93,6 @@ export default class MusicalCircle {
         .attr('stroke-width', 2); // adjust the width as necessary
     });
   }
-  
   
   drawModes(key, mode){
     const scaleIntervals = {

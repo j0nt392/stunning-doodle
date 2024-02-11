@@ -1,29 +1,36 @@
-import boto3
-import json
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 import os
+import subprocess
 from utils import Chord_classifier, Chord_preprocessing
 
+app = Flask(__name__)
+CORS(app)
 chord_classifier = Chord_classifier()
-chord_preprocessing = Chord_preprocessing()
+preprocessing = Chord_preprocessing()
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory('uploads', filename)
 
-def lambda_handler(event, context):
-    # Assuming the event contains the S3 bucket name and object key
-    s3_bucket = event['Records'][0]['s3']['bucket']['name']
-    s3_object_key = event['Records'][0]['s3']['object']['key']
+@app.route('/audio', methods=['POST'])
+def receive_audio():
+    if 'audio' not in request.files:
+        return jsonify({"error": "No audio file in the request"}), 400
 
-    s3_client = boto3.client('s3')
+    audio_file = request.files['audio']
 
-    # Download file from S3
-    local_file_name = '/tmp/audio.wav'
-    s3_client.download_file(s3_bucket, s3_object_key, local_file_name)
+    uploads_dir = 'uploads'
+    os.makedirs(uploads_dir, exist_ok=True)
+    file_path = os.path.join(uploads_dir, audio_file.filename)
 
-    # Here you would include your logic to process the audio file
-    # For example, loading your machine learning model and making predictions
-    # This part of the code will depend on your specific requirements and libraries
+    audio_file.save(file_path)
 
-    # Mockup of your processing logic (replace with your actual logic)
-    notes, chord = chord_classifier.predict_new_chord(local_file_name, 44100)
+    # Convert the audio file to WAV using ffmpeg
+    wav_path = os.path.join(uploads_dir, 'audio.wav')
+    subprocess.run(['ffmpeg', '-y', '-i', file_path, wav_path])
+
+    notes, chord = chord_classifier.predict_new_chord('uploads/audio.wav', 44100)
     chord = chord.tolist()
 
     data = {
@@ -31,8 +38,11 @@ def lambda_handler(event, context):
         "chord": chord
     }
 
-    # Return the response
-    return {
-        'statusCode': 200,
-        'body': json.dumps(data)
-    }
+    return data, 200
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=5000)
+
+# for deployment on aws
+# if __name__ == '__main__':
+#     app.run(host="0.0.0.0", port=80)
