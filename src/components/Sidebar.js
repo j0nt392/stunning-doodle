@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-// import './Sidebar.css';
+import React, { useRef, useEffect, useState } from "react";
+import LiveWaveform from "./audioplayer";
 
 function Sidebar({
   settings,
@@ -8,11 +8,13 @@ function Sidebar({
   progression,
   onChordClick,
   connectedDevices,
+  isRecording,
 }) {
   // State hooks to manage the visibility of each section
   const [isCircleSettingsVisible, setIsCircleSettingsVisible] = useState(true);
   const [isScalesModesVisible, setIsScalesModesVisible] = useState(true);
   const [isProgressionsVisible, setIsProgressionsVisible] = useState(true);
+  const [devices, setDevices] = useState(true)
   // Toggle functions for each section
   const toggleCircleSettingsVisibility = () => {
     setIsCircleSettingsVisible(!isCircleSettingsVisible);
@@ -42,7 +44,9 @@ function Sidebar({
     onSettingsChange(event.target.name, event.target.value);
   };
 
-  
+  const handleDeviceChange = () => {
+    setDevices(!devices)
+  }
 
   const keys = [
     "C",
@@ -52,50 +56,52 @@ function Sidebar({
     "E",
     "F",
     "Gb",
-    'G',
+    "G",
     "Ab",
     "A",
-    'Bb', 
-    'B'
+    "Bb",
+    "B",
   ];
   // const blackKeys = ['Ab', 'Gb', 'Eb', 'Db', 'Bb']
-  const blackKeys = ['Db', 'Eb', 'Gb', 'Ab', 'Bb']
+  const blackKeys = ["Db", "Eb", "Gb", "Ab", "Bb"];
 
   const renderActiveNotes = () => {
     let marginLeft = 0; // Initialize the left margin for white keys
-  
+
     return keys.map((key, index) => {
       const isBlackKey = blackKeys.includes(key);
-      let keyClasses = ' ';
-      keyClasses += isBlackKey ? 'bg-black text-white h-[60px] w-[36px] absolute z-20 ' : 'bg-white text-black h-28 w-[72px] relative ';
-  
+      let keyClasses = " ";
+      keyClasses += isBlackKey
+        ? "bg-black text-white h-[60px] w-[36px] absolute z-20 "
+        : "bg-white text-black h-28 w-[72px] relative ";
+
       // Manually set left values for each black key
       if (isBlackKey) {
-          // Distance from the left edge of the white keys container
-          let leftDistance;
-          switch (key) {
-              case 'Db':
-                  leftDistance = 'ml-[50px]' //Width of C white key + some offset
-                  break;
-              case 'Eb':
-                  leftDistance = 'ml-[118px]'; // Width of D white key + some offset
-                  break;
-              case 'Gb':
-                  leftDistance = 'ml-[252px]'; // Width of F white key + some offset
-                  break;
-              case 'Ab':
-                  leftDistance = 'ml-[320px]' // Width of G white key + some offset
-                  break;
-              case 'Bb':
-                  leftDistance = 'ml-[385px]'; // Width of A white key + some offset
-                  break;
-              default:
-                  leftDistance = 'ml-0';
-                  break;
-          }
-          keyClasses += ` ${leftDistance}`;
+        // Distance from the left edge of the white keys container
+        let leftDistance;
+        switch (key) {
+          case "Db":
+            leftDistance = "ml-[50px]"; //Width of C white key + some offset
+            break;
+          case "Eb":
+            leftDistance = "ml-[118px]"; // Width of D white key + some offset
+            break;
+          case "Gb":
+            leftDistance = "ml-[252px]"; // Width of F white key + some offset
+            break;
+          case "Ab":
+            leftDistance = "ml-[320px]"; // Width of G white key + some offset
+            break;
+          case "Bb":
+            leftDistance = "ml-[385px]"; // Width of A white key + some offset
+            break;
+          default:
+            leftDistance = "ml-0";
+            break;
+        }
+        keyClasses += ` ${leftDistance}`;
       }
-  
+
       return (
         <div key={key} className={keyClasses}>
           {key}
@@ -103,10 +109,9 @@ function Sidebar({
       );
     });
   };
-  
 
   return (
-    <aside className="text-gray-500 gap-y-3 col-start-1 col-span-4 flex flex-col p-5 bg-gray-900  h-[100%] shadow-2xl">
+    <aside className="text-gray-500 gap-y-3 col-start-1 col-span-4 flex flex-col p-5 bg-gray-900 w-full h-[100%] shadow-2xl">
       <h2 className="text-gray-300" onClick={toggleCircleSettingsVisibility}>
         Settings
       </h2>
@@ -258,15 +263,36 @@ function Sidebar({
         </div>
       )}
       <div className="collapsible-header text-gray-300">
-        <h2>Devices</h2>
+        <div className="flex justify-between ">
+          <h2>Devices</h2>
+          <select onChange={handleDeviceChange}>
+            <option value="Audio">Audio</option>
+            <option value="Midi">
+              Midi
+            </option>
+          </select>
+        </div>
         {connectedDevices.map((device, index) => (
           <div key={index}>
             <h5>Device Name: {device.name}</h5>
+
             <h5>Status: {device.state}</h5>
           </div>
         ))}
+      {!devices && (
+        <>
+      <div className="text-black rounded text-center flex w-full relative">
+        {renderActiveNotes()}
       </div>
-      <div className="text-black rounded text-center flex w-full relative">{renderActiveNotes()}</div>
+        </>
+      )}
+
+      {devices && (
+        <>
+        <LiveWaveform></LiveWaveform>
+        </>
+      )} 
+      </div>
     </aside>
   );
 }

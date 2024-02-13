@@ -1,8 +1,9 @@
 from flask import Flask, request
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 import os
 from utils import Chord_classifier, Chord_preprocessing
 import io
+import subprocess
 from pydub import AudioSegment
 import soundfile as sf
 
@@ -42,15 +43,18 @@ if not os.path.exists(AUDIO_SAVE_PATH):
 
 audio_sessions = {}  # Dict to hold audio chunks by session ID
 
-@socketio.on('audio_chunk')
+@socketio.on('audio_data')
 def handle_audio_chunk(data):
-    session_id = data['session_id']  # Ensure this matches the client's format
-    chunk = data['chunk']
-    print(f"Received chunk for session {session_id}")  # Debugging print
-    if session_id not in audio_sessions:
-        audio_sessions[session_id] = []
-    audio_sessions[session_id].append(chunk)
+    print(data)
+    notes, chord = chord_classifier.predict_new_chord(data, 44100)
+    chord = chord.tolist()
 
+    response = {
+        "notes": notes, 
+        "chord": chord
+    }
+
+    emit('audio_data', response)
 
 @socketio.on('recording_stopped')
 def handle_recording_stopped(data):

@@ -18,11 +18,6 @@ const generateSessionId = () => {
   return `${new Date().getTime()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 function MainWindow() {
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const socket = useSocket();
-  const [sessionId, setSessionId] = useState(null);
-
-  const [isRecording, setIsRecording] = useState(false);
   const [allReceivedNotes, setAllReceivedNotes] = useState([["C", "E", "G"]]);
   const [chord, setChord] = useState("");
   const [progression, setProgression] = useState([]);
@@ -31,90 +26,145 @@ function MainWindow() {
   const [playedChords, setPlayedChords] = useState([]);
   const svgRef = useRef(null);
   const radius = 230;
-  let audioContext;
-  let savedAudioUrl;
-  
-  // Function to initialize the AudioContext
-  function initAudioContext() {
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      console.log("AudioContext initialized");
-    } catch (e) {
-      console.error("The Web Audio API is not supported in this browser", e);
-    }
-  }
-  // RECORD SOUNDS And PLAY BACK
+
+  const socket = useSocket();
+  const [isRecording, setIsRecording] = useState(false);
+  const audioContextRef = useRef(null);
+  const scriptProcessorNodeRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const isRecordingRef = useRef(isRecording);
+  const [processingAudio, setProcessingAudio] = useState(false);
+
   useEffect(() => {
-    const onProcessedAudio = (audioBlob) => {
-      console.log("received processedaudio", audioBlob);
-    };
-    let currentAudioUrl = null; // Holds the current Blob URL
-    // Setup to handle incoming audio for immediate playback
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
 
-    socket.on("complete_recording", (completeAudio) => {
-      if (currentAudioUrl) {
-        URL.revokeObjectURL(currentAudioUrl);
-        currentAudioUrl = null;
+  const handleAudioData = (data) => {
+    let newNotes = data.notes;
+    setPlayedChords((prevChords) => {
+      // Add the new chord if it's not already in the playedChords
+      const newChord = JSON.stringify(newNotes);
+      if (!prevChords.find((chord) => JSON.stringify(chord) === newChord)) {
+        return [...prevChords, newNotes];
       }
-      const audioBlob = new Blob([completeAudio], { type: "audio/webm" });
-      currentAudioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(currentAudioUrl);
-      audio
-        .play()
-        .then(() => {
-          console.log("playback started");
-        })
-        .catch((error) => {
-          console.error("Playback failed", error);
-        });
-      console.log("received recording", completeAudio);
+      return prevChords;
     });
-
-    initializeSocketListeners(onProcessedAudio);
-    return () => {
-      socket.off("processed_audio", onProcessedAudio);
-      socket.off("complete_recording");
-    };
-  }, []);
-
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    const newSessionId = generateSessionId(); // Generate a new session ID
-    setSessionId(newSessionId); // Store it in the state
-    const onDataAvailable = (event) => {
-      if (event.data.size > 0) {
-        socket.emit("audio_chunk", {
-          session_id: newSessionId,
-          chunk: event.data,
-        });
-      }
-    };
-
-    startRecording(onDataAvailable)
-      .then((recorder) => {
-        setMediaRecorder(recorder);
-      })
-      .catch((error) => console.error("Start recording error:", error));
   };
 
-  function handleStopRecording() {
-    setIsRecording(false);
-    if (mediaRecorder) {
-      stopRecording(mediaRecorder);
-      mediaRecorder.stream.getTracks().forEach((track) => track.stop()); // Stop all stream tracks
-      setMediaRecorder(null);
-      socket.emit("recording_stopped", { session_id: sessionId }); // Include the session ID
+  useEffect(() => {
+    socket.on("audio_data", handleAudioData);
+    return () => {
+      socket.off("audio_data", handleAudioData);
+    };
+  }, [socket]);
+
+  const handleStartRecording = () => {
+    // Check if the AudioContext is already created
+    if (!audioContextRef.current) {
+      // Create the AudioContext inside a user-triggered function
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      // Create a ScriptProcessorNode for real-time audio processing
+      const scriptProcessorNode = audioContext.createScriptProcessor(
+        4096,
+        1,
+        1
+      );
+      scriptProcessorNodeRef.current = scriptProcessorNode;
+
+      // Add event listener for audio processing
+      scriptProcessorNode.addEventListener("audioprocess", handleAudioProcess);
     }
-  }
+
+    // Start recording
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        const microphone =
+          audioContextRef.current.createMediaStreamSource(stream);
+        microphone.connect(scriptProcessorNodeRef.current);
+        scriptProcessorNodeRef.current.connect(
+          audioContextRef.current.destination
+        );
+
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+          console.log("Data available:", event.data);
+          // Process the audio data here
+        };
+
+        mediaRecorder.start();
+      })
+      .catch((error) => {
+        console.error("Error accessing microphone:", error);
+      });
+  };
+
+  const handleStopRecording = () => {
+    console.log("Stopping recording...");
+    if (mediaRecorderRef.current) {
+      // Stop the media recorder
+      mediaRecorderRef.current.stop();
+
+      // Remove the event listener for audio processing
+      console.log("Removing event listener for audio processing...");
+      scriptProcessorNodeRef.current.removeEventListener(
+        "audioprocess",
+        handleAudioProcess
+      );
+    }
+  };
 
   const handleRecordButtonClick = () => {
+    console.log("rec" + isRecording);
+
     if (isRecording) {
+      setIsRecording(false);
       handleStopRecording();
     } else {
-      initAudioContext();
+      setIsRecording(true);
       handleStartRecording();
     }
-    console.log(isRecording);
+  };
+
+  const calculateRMS = (audioData) => {
+    let sumOfSquares = 0;
+    for (let i = 0; i < audioData.length; i++) {
+      sumOfSquares += audioData[i] * audioData[i];
+    }
+    const meanSquare = sumOfSquares / audioData.length;
+    const rms = Math.sqrt(meanSquare);
+    return rms;
+  };
+
+  const handleAudioProcess = (event) => {
+    // Guard clause to prevent rapid execution
+    if (isRecordingRef.current && !processingAudio) {
+      setProcessingAudio(true); // Set flag to indicate processing
+      console.log("rec from audioprocess" + isRecordingRef.current);
+
+      const inputData = event.inputBuffer.getChannelData(0);
+
+      // Calculate the RMS value
+      const rms = calculateRMS(inputData);
+
+      // Set your threshold RMS value
+      const thresholdRMS = 0.045; // Adjust this value as needed
+
+      // Compare the RMS value to the threshold
+      if (rms > thresholdRMS) {
+        const audioArray = Array.from(inputData);
+        socket.emit("audio_data", audioArray);
+      }
+
+      setTimeout(() => {
+        setProcessingAudio(false); // Reset processing flag after a short delay
+      }, 100); // Adjust the delay as needed
+    }
   };
 
   // HANDLE MIDI KEYBOARD INPUTS
@@ -187,7 +237,6 @@ function MainWindow() {
 
   // DRAWING AND Rendering THE CIRCLES
   useEffect(() => {
-    console.log(mediaRecorder);
     if (svgRef.current) {
       // Choose circle
       let circle;
@@ -203,7 +252,7 @@ function MainWindow() {
       // Color constants
       const colors =
         settings.circleColorScheme === "monochrome"
-          ? Array(12).fill("#4A5568") // All segments black for monochrome
+          ? Array(12).fill("#87B1B0") // All segments black for monochrome
           : [
               "#e57373", // Soft Red
               "#ffa726", // Soft Orange
@@ -221,6 +270,23 @@ function MainWindow() {
 
       circle.setSegmentColors(colors);
       circle.draw(svgRef.current);
+      if (isRecording) {
+        if (!settings.storeShapes && playedChords.length >= 2) {
+          playedChords.shift();
+        }
+        playedChords.forEach((chord) => {
+          circle.drawChordLines(
+            svgRef.current,
+            chord, // Draw the chord
+            settings.dottedLines ? true : false,
+            settings.shapeColorScheme,
+            settings.circleType === "Chromatic circle" ||
+              settings.circleType === "Circle of fifths"
+              ? "big"
+              : "small"
+          );
+        });
+      }
 
       // Draw midi notes
       if (svgRef.current) {
@@ -269,6 +335,7 @@ function MainWindow() {
       <div className="flex bg-gray-800">
         <div className="">
           <Sidebar
+            isRecording={isRecording}
             connectedDevices={connectedDevices}
             settings={settings}
             onSettingsChange={handleSettingsChange}

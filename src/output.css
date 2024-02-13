@@ -669,6 +669,10 @@ video {
   height: 90vh;
 }
 
+.h-full {
+  height: 100%;
+}
+
 .w-\[100\%\] {
   width: 100%;
 }
@@ -683,6 +687,18 @@ video {
 
 .w-full {
   width: 100%;
+}
+
+.w-\[500px\] {
+  width: 500px;
+}
+
+.w-\[25\%\] {
+  width: 25%;
+}
+
+.w-\[2\] {
+  width: 2;
 }
 
 .transform {
@@ -707,6 +723,10 @@ video {
 
 .justify-center {
   justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
 }
 
 .justify-evenly {

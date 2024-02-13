@@ -6,21 +6,22 @@ const startRecording = (onDataAvailable) => {
   return new Promise((resolve, reject) => {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
-        const mediaRecorder = new MediaRecorder(stream);
+        console.log('recording start')
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
         mediaRecorder.ondataavailable = onDataAvailable;
-        mediaRecorder.start(2000); // Adjust timeSlice as needed
-        resolve(mediaRecorder); // Resolve the promise with the MediaRecorder instance
+        mediaRecorder.start(); // More frequent chunks for real-time streaming
+        resolve(mediaRecorder);
       })
       .catch(error => {
         console.error('MediaRecorder start error:', error);
-        reject(error); // Reject the promise if getUserMedia fails
+        reject(error);
       });
   });
 };
 
 const stopRecording = (mediaRecorder) => {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop(); // Stops recording
+    mediaRecorder.stop();
     console.log('Recording stopped');
   } else {
     console.error('Attempted to stop recording, but MediaRecorder was not active.');
@@ -32,32 +33,6 @@ const initializeSocketListeners = (onProcessedAudio) => {
 };
 
 export { startRecording, stopRecording, initializeSocketListeners };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // const sendAudioToServer = async (audioBlob) => {

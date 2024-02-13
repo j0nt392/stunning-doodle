@@ -48,9 +48,9 @@ export default class MusicalCircle {
         console.log(hue);
         return d3.hsl(hue, 2, 2.5).toString();
       case 'monochrome':
-        return '#7986cb';
+        return '#87B1B0';
       default:
-        return '#7986cb';
+        return '#87B1B0';
     }
   }
 
