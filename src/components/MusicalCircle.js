@@ -7,7 +7,9 @@ export default class MusicalCircle {
     this.centerY = radius; // Assuming the SVG will be twice the radius
     this.segmentColors = []; // Placeholder for colors
     this.labels = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-
+    this.minorChords = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m', 'A#m', 'Fm', 'Cm', 'Gm', 'Dm'];
+    this.diminishedChords = ['B°', 'F#°', 'C#°', 'G#°', 'D#°', 'A#°', 'F°', 'C°', 'G°', 'D°', 'A°', 'E°'];
+    this.modes = ['Locrian', 'Phrygian', 'Aeolian', 'Dorian', 'Mixolydian', 'Ionian', 'Lydian'];
   }
 
   setSegmentColors(colors) {
@@ -18,8 +20,27 @@ export default class MusicalCircle {
     }
   }
   
-  // Similarly, you might have setMinorSegmentColors and setDiminishedSegmentColors
-  
+  shiftLabelsUp(){
+    const lastMajorElement = this.labels.pop()
+    this.labels.unshift(lastMajorElement)
+
+    const lastMinorElement = this.minorChords.pop()
+    this.minorChords.unshift(lastMinorElement)
+
+    const lastDiminishedElement = this.diminishedChords.pop()
+    this.diminishedChords.unshift(lastDiminishedElement);
+  }  
+
+  shiftLabelsDown(){
+    const firstMajorElement = this.labels.shift()
+    this.labels.push(firstMajorElement)
+
+    const lastMinorElement = this.minorChords.shift()
+    this.minorChords.push(lastMinorElement)
+
+    const lastDiminishedElement = this.diminishedChords.shift()
+    this.diminishedChords.push(lastDiminishedElement);
+  }  
 
   clear(svgContainer) {
     d3.select(svgContainer).selectAll('*').remove(); // Clear previous drawing

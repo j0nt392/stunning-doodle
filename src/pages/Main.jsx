@@ -26,7 +26,8 @@ function MainWindow() {
   const [playedChords, setPlayedChords] = useState([]);
   const svgRef = useRef(null);
   const radius = 230;
-
+  const [circle, setCircle] = useState();
+  const [colors, setColors] = useState();
   const socket = useSocket();
   const [isRecording, setIsRecording] = useState(false);
   const audioContextRef = useRef(null);
@@ -235,24 +236,32 @@ function MainWindow() {
     });
   };
 
-  // DRAWING AND Rendering THE CIRCLES
   useEffect(() => {
     if (svgRef.current) {
-      // Choose circle
-      let circle;
+      let newCircle;
       const circleType = settings.circleType;
-      if (circleType === "Chromatic circle") {
-        circle = new ChromaticCircle(radius);
-      } else if (circleType === "Circle of fifths") {
-        circle = new CircleOfFifths(radius);
-      } else if (circleType === "Full circle of fifths") {
-        circle = new FullCircleOfFifths(radius);
+      switch (circleType) {
+        case "Chromatic circle":
+          newCircle = new ChromaticCircle(radius);
+          break;
+        case "Circle of fifths":
+          newCircle = new CircleOfFifths(radius);
+          break;
+        case "Full circle of fifths":
+          newCircle = new FullCircleOfFifths(radius);
+          break;
+        default:
+          return; // Exit if no valid circleType is matched
       }
+      setCircle(newCircle);
+    }
+  }, [settings.circleType]); // React to changes in circleType
 
-      // Color constants
+  useEffect(() => {
+    if (circle && svgRef.current) {
       const colors =
         settings.circleColorScheme === "monochrome"
-          ? Array(12).fill("#87B1B0") // All segments black for monochrome
+          ? Array(12).fill("#87B1B0")
           : [
               "#e57373", // Soft Red
               "#ffa726", // Soft Orange
@@ -267,9 +276,38 @@ function MainWindow() {
               "#9575cd", // Soft Violet
               "#f06292", // Soft Magenta
             ];
-
       circle.setSegmentColors(colors);
       circle.draw(svgRef.current);
+    }
+  }, [circle, settings.circleColorScheme]);
+
+  useEffect(() => {
+    if (svgRef.current) {
+      if (!settings.storeShapes && playedChords.length >= 2) {
+        playedChords.shift();
+      }
+      playedChords.forEach((chord) => {
+        if (chord.length >= 3) {
+          // Ensure it's a valid chord
+          circle.draw(svgRef.current)
+          circle.drawChordLines(
+            svgRef.current,
+            chord, // Draw the chord
+            settings.dottedLines ? true : false,
+            settings.shapeColorScheme,
+            settings.circleType === "Chromatic circle" ||
+              settings.circleType === "Circle of fifths"
+              ? "big"
+              : "small"
+          );
+        }
+      });
+    }
+  }, [activeMidiNotes, playedChords])
+
+  // DRAWING AND Rendering THE CIRCLES
+  useEffect(() => {
+    if (svgRef.current) {
       if (isRecording) {
         if (!settings.storeShapes && playedChords.length >= 2) {
           playedChords.shift();
@@ -288,28 +326,6 @@ function MainWindow() {
         });
       }
 
-      // Draw midi notes
-      if (svgRef.current) {
-        if (!settings.storeShapes && playedChords.length >= 2) {
-          playedChords.shift();
-        }
-        playedChords.forEach((chord) => {
-          if (chord.length >= 3) {
-            // Ensure it's a valid chord
-            circle.drawChordLines(
-              svgRef.current,
-              chord, // Draw the chord
-              settings.dottedLines ? true : false,
-              settings.shapeColorScheme,
-              settings.circleType === "Chromatic circle" ||
-                settings.circleType === "Circle of fifths"
-                ? "big"
-                : "small"
-            );
-          }
-        });
-      }
-
       if (settings.key && settings.mode) {
         const notes = circle.drawModes(settings.key, settings.mode);
         circle.drawChordLines(
@@ -324,7 +340,16 @@ function MainWindow() {
         );
       }
     }
-  }, [settings, allReceivedNotes, activeMidiNotes, playedChords]);
+  }, [settings, playedChords]);
+
+  const shiftLabelsUp = () => {
+    circle.shiftLabelsUp();
+    circle.draw(svgRef.current);
+  };
+  const shiftLabelsDown = () => {
+    circle.shiftLabelsDown();
+    circle.draw(svgRef.current);
+  };
 
   return (
     <>
@@ -332,6 +357,7 @@ function MainWindow() {
         onDevicesChange={handleDevicesChange}
         onActiveNotesChange={handleActiveNotesChange}
       />
+
       <div className="flex bg-gray-800">
         <div className="">
           <Sidebar
@@ -377,14 +403,31 @@ function MainWindow() {
           </div>
         </div>
 
-        <div className="text-gray flex justify-center items-center w-full">
+        <div className="text-gray flex flex-col justify-center items-center w-full">
+
           <svg
             ref={svgRef}
             width={460}
             height={460}
             viewBox="-50,0,550,460"
           ></svg>
+          <div className="flex ml-2 mt-5">
+          <img
+            src="arrow.svg"
+            onClick={() => shiftLabelsDown()}
+            className="h-10 hover:cursor-pointer"
+            style={{ rotate: "-90deg"}}
+            />
+          <img
+            src="arrow.svg"
+            onClick={() => shiftLabelsUp()}
+            className="h-10 hover:cursor-pointer "
+            style={{ rotate: "90deg"}}
+            />
+
+            </div>
         </div>
+        
       </div>
     </>
   );

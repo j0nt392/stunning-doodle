@@ -4,11 +4,8 @@ import * as d3 from 'd3';
 export default class FullCircleOfFifths extends MusicalCircle {
   constructor(radius) {
     super(radius);
-    // Define the arrays for each circle
     this.labels = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
-    this.minorChords = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m', 'A#m', 'Fm', 'Cm', 'Gm', 'Dm'];
-    this.diminishedChords = ['B°', 'F#°', 'C#°', 'G#°', 'D#°', 'A#°', 'F°', 'C°', 'G°', 'D°', 'A°', 'E°'];
-    this.modes = ['Locrian', 'Phrygian', 'Aeolian', 'Dorian', 'Mixolydian', 'Ionian', 'Lydian'];
+
   }
 
   draw(svgContainer) {
@@ -85,10 +82,10 @@ export default class FullCircleOfFifths extends MusicalCircle {
       // Calculate label position for this chord
       const angle = i * segmentAngle - Math.PI / 2; // Adjust the angle for the label
       const labelRadius = radius - 10; // Adjust the label radius as necessary
-  
+      const rotationangle = (i * 360 / 12) - 90; 
+
       const labelX = labelRadius * Math.cos(angle);
       const labelY = labelRadius * Math.sin(angle);
-  
       // Append the text label for this chord
       d3.select(this).append('text')
         .attr('x', labelX)
@@ -96,13 +93,14 @@ export default class FullCircleOfFifths extends MusicalCircle {
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'central')
         .text(d) // Only the current label, not all labels
-        .attr('class', `${className}-label`);
+        .attr('class', `${className}-label`)
+        .attr('transform', `rotate(${rotationangle + 90}, ${labelX}, ${labelY})`)
     });
   
   // Add hover effects to the group, not the individual elements
   groups.on('mouseenter', function(event, d) {
     // Highlight this group
-    d3.select(this).select('path').attr('fill', '#386E90'); // Change color on hover
+    d3.select(this).select('path').attr('fill', '#87B1B0'); // Change color on hover
     
     // Get related chords based on the key
     // Get related chords based on the key
@@ -115,7 +113,7 @@ export default class FullCircleOfFifths extends MusicalCircle {
           if (relatedChords.includes(textElement.text())) {
             // Find the parent group and select the path to change its fill
             const parentGroup = textElement.node().parentNode;
-            d3.select(parentGroup).select('path').attr('fill', '#386E90');
+            d3.select(parentGroup).select('path').attr('fill', '#87B1B0');
           }
         });
       });
