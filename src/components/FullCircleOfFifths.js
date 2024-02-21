@@ -4,8 +4,20 @@ import * as d3 from 'd3';
 export default class FullCircleOfFifths extends MusicalCircle {
   constructor(radius) {
     super(radius);
-    this.labels = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
-
+    this.labels = {
+      'I': 'C',
+      'V': 'G',
+      'II': 'D',
+      'VI': 'A',
+      'III': 'E',
+      'VII': 'B',
+      'bV': 'Gb',
+      'bII': 'Db',
+      'bVI': 'Ab',
+      'bIII': 'Eb',
+      'bVII': 'Bb',
+      'IV': 'F'
+    };
   }
 
   draw(svgContainer) {
@@ -23,16 +35,10 @@ export default class FullCircleOfFifths extends MusicalCircle {
     
     // Draw the mode labels around the edge
     this.drawLabels(svgContainer, outerRadius + 20, this.modes, "modes");
-    //this.highlightArcs(svgContainer, this.radius, [1, 3], "major");
-    //this.highlightArcs(svgContainer, this.radius * 0.5, [1,2,3], "diminished");
-    //this.highlightArcs(svgContainer, this.radius * 1.28, [2], "major");
-
-    // Highlight the key of C (or any other key, depending on the input)
-    //this.highlightKey(svgContainer, 'C', outerRadius, middleRadius, innerRadius);
   }
 
   drawCircle(svgContainer, radius, labels, className) {
-    const segmentAngle = (2 * Math.PI) / labels.length;
+    const segmentAngle = (2 * Math.PI) / 12;
     const chordRelationships = {
       'C': ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'B°'],
       'Db': ['C#', 'D#m', 'Fm', 'Gb', 'Ab', 'A#m', 'C°'],
@@ -48,6 +54,9 @@ export default class FullCircleOfFifths extends MusicalCircle {
       'B': ['B', 'C#m', 'D#m', 'E', 'Gb', 'G#m', 'A#°']
     };
 
+    const labelsArray = Object.entries(labels);
+    console.log(labelsArray.length)
+
     // Create an arc generator
     const arc = d3.arc()
       .innerRadius(radius - 38) // Inner radius of segment, adjust as needed
@@ -57,74 +66,85 @@ export default class FullCircleOfFifths extends MusicalCircle {
   
     // Bind the labels data to groups
     const groups = svg.selectAll(`.${className}-group`)
-      .data(labels)
+      .data(labelsArray)
       .enter()
       .append('g')
       .attr('class', `${className}-group`)
       .attr('transform', `translate(${this.centerX}, ${this.centerY})`)
-      .attr('id', d => `${className}-${d.replace('#', 'sharp')}`); // Replace '#' with 'sharp' to ensure valid IDs
-  
+      .attr('id', d => `${className}-${d[0].replace('#', 'sharp')}`); // Use d[0] for the key in the entry
+    
+    var self = this;
     // Append the arc path to each group
     groups.each(function(d, i) {
       // Calculate start and end angles for this segment
       const startAngle = i * segmentAngle + 50; // Adjust the start angle as needed
       const endAngle = (i + 1) * segmentAngle + 50; // Adjust the end angle as needed
-  
       // Draw the arc for this segment
       d3.select(this).append('path')
-        .attr("id", "wavy") //Unique id of the path
-
         .attr("d", "M 10,90 Q 100,15 200,70 Q 340,140 400,30") //SVG path
         .attr('d', arc.startAngle(startAngle).endAngle(endAngle))
-        .attr('fill', '#CDD3D0') // Default fill color, can be changed with CSS
+        .attr('fill', self.segmentColors[i])
+       // .attr('fill', '#CDD3D0') // Default fill color, can be changed with CSS
         .attr('stroke', 'black');
-  
+      
       // Calculate label position for this chord
       const angle = i * segmentAngle - Math.PI / 2; // Adjust the angle for the label
       const labelRadius = radius - 10; // Adjust the label radius as necessary
-      const rotationangle = (i * 360 / 12) - 90; 
-
+      const rotationangle = (i * 360 / 12) - 90;       
+      
       const labelX = labelRadius * Math.cos(angle);
       const labelY = labelRadius * Math.sin(angle);
       // Append the text label for this chord
-      d3.select(this).append('text')
-        .attr('x', labelX)
-        .attr('y', labelY)
-        .attr('text-anchor', 'middle')
-        .attr('dominant-baseline', 'central')
-        .text(d) // Only the current label, not all labels
-        .attr('class', `${className}-label`)
-        .attr('transform', `rotate(${rotationangle + 90}, ${labelX}, ${labelY})`)
-    });
-  
+  // Create the main text element
+  const text = d3.select(this).append('text')
+    .attr('x', labelX)
+    .attr('y', labelY)
+    .attr('text-anchor', 'middle')
+    .attr('dominant-baseline', 'central')
+    .attr('class', `${className}-label`)
+    .attr('transform', `rotate(${rotationangle + 90}, ${labelX}, ${labelY})`);
+
+  // Append first tspan for d[0]
+  text.append('tspan')
+    .style('font-weight', 'normal') // Style for d[0]
+    .style('font-size', '13px')
+    .text(`${d[0]} `);
+
+  // Append second tspan for d[1]
+  text.append('tspan')
+    .style('font-weight', 'bold') // Different style for d[1]
+    .attr('dx', '5') // Add some space between d[0] and d[1]
+    .text(d[1]);
+      
+      });
+
+
   // Add hover effects to the group, not the individual elements
   groups.on('mouseenter', function(event, d) {
-    // Highlight this group
-    d3.select(this).select('path').attr('fill', '#87B1B0'); // Change color on hover
-    
+    // Change fill opacity for the hovered group
+    d3.select(this).select('path').attr('fill-opacity', '0.5');
+  
     // Get related chords based on the key
-    // Get related chords based on the key
-    const relatedChords = chordRelationships[d];
+    const relatedChords = chordRelationships[d[1]];
     if (relatedChords) {
-      relatedChords.forEach(chord => {
-        // Highlight the related chords across all groups (major, minor, diminished)
-        svg.selectAll('text').each(function() {
-          const textElement = d3.select(this);
-          if (relatedChords.includes(textElement.text())) {
-            // Find the parent group and select the path to change its fill
-            const parentGroup = textElement.node().parentNode;
-            d3.select(parentGroup).select('path').attr('fill', '#87B1B0');
-          }
-        });
+      svg.selectAll('text').each(function() {
+        const textElement = d3.select(this);
+        const textParts = textElement.text().split(' '); // Split the text content by space
+        const chordName = textParts[textParts.length - 1]; // Assume the chord name is the last part
+  
+        if (relatedChords.includes(chordName)) {
+          // Find the parent group and select the path to change its fill opacity
+          const parentGroup = textElement.node().parentNode;
+          d3.select(parentGroup).select('path').attr('fill-opacity', '0.5');
+        }
       });
     }
   })
   .on('mouseleave', function(event, d) {
     // Remove hover effect from all chords
-    svg.selectAll('path').attr('fill', '#CDD3D0');
-  });
+    svg.selectAll('path').attr('fill-opacity', '1');
 
-  // Assuming you have a `ref` to your SVG element
+  });
 
   }
   

@@ -216,12 +216,11 @@ function MainWindow() {
     setPlayedChords([]);
   };
 
-  // GLOBAL SETTINGS
   const [settings, setSettings] = useState({
     circleType: "Chromatic circle",
     enharmonic: false,
     dottedLines: false,
-    circleColorScheme: "monochrome",
+    circleColorScheme: "Rainbow",
     storeShapes: false,
     shapeColorScheme: "monochrome",
     isDrawing: false,
@@ -236,6 +235,7 @@ function MainWindow() {
     });
   };
 
+  //Set circle type
   useEffect(() => {
     if (svgRef.current) {
       let newCircle;
@@ -255,14 +255,16 @@ function MainWindow() {
       }
       setCircle(newCircle);
     }
-  }, [settings.circleType]); // React to changes in circleType
+  }, [settings]); // React to changes in circleType
 
+  //Define circle-style
   useEffect(() => {
     if (circle && svgRef.current) {
       const colors =
         settings.circleColorScheme === "monochrome"
-          ? Array(12).fill("#87B1B0")
+          ? Array(12).fill("#CDD3D0")
           : [
+              "#f06292", // Soft Magenta
               "#e57373", // Soft Red
               "#ffa726", // Soft Orange
               "#ffd54f", // Soft Yellow-Orange
@@ -274,22 +276,22 @@ function MainWindow() {
               "#4fc3f7", // Soft Sky Blue
               "#7986cb", // Soft Blue
               "#9575cd", // Soft Violet
-              "#f06292", // Soft Magenta
             ];
       circle.setSegmentColors(colors);
       circle.draw(svgRef.current);
     }
   }, [circle, settings.circleColorScheme]);
 
-  useEffect(() => {
+  function renderChords(){
     if (svgRef.current) {
-      if (!settings.storeShapes && playedChords.length >= 2) {
-        playedChords.shift();
+      if(activeMidiNotes){
+        if (!settings.storeShapes && playedChords.length >= 2) {
+          playedChords.splice(0, playedChords.length - 1);
+        }
       }
       playedChords.forEach((chord) => {
         if (chord.length >= 3) {
           // Ensure it's a valid chord
-          circle.draw(svgRef.current)
           circle.drawChordLines(
             svgRef.current,
             chord, // Draw the chord
@@ -303,29 +305,10 @@ function MainWindow() {
         }
       });
     }
-  }, [activeMidiNotes, playedChords])
+  }
 
-  // DRAWING AND Rendering THE CIRCLES
-  useEffect(() => {
+  function renderModes(){
     if (svgRef.current) {
-      if (isRecording) {
-        if (!settings.storeShapes && playedChords.length >= 2) {
-          playedChords.shift();
-        }
-        playedChords.forEach((chord) => {
-          circle.drawChordLines(
-            svgRef.current,
-            chord, // Draw the chord
-            settings.dottedLines ? true : false,
-            settings.shapeColorScheme,
-            settings.circleType === "Chromatic circle" ||
-              settings.circleType === "Circle of fifths"
-              ? "big"
-              : "small"
-          );
-        });
-      }
-
       if (settings.key && settings.mode) {
         const notes = circle.drawModes(settings.key, settings.mode);
         circle.drawChordLines(
@@ -340,15 +323,30 @@ function MainWindow() {
         );
       }
     }
-  }, [settings, playedChords]);
+  }
+
+  //Draw chord-lines
+  useEffect(() => {
+    if(svgRef.current && circle){
+      circle.draw(svgRef.current)
+    }
+      renderChords()
+    if(settings.key && settings.mode && settings.circleType === 'Chromatic circle'){
+      renderModes()
+    }
+  }, [playedChords, circle, settings.key, settings.mode])
+
+
 
   const shiftLabelsUp = () => {
     circle.shiftLabelsUp();
-    circle.draw(svgRef.current);
+    circle.draw(svgRef.current)
+    renderChords()
   };
   const shiftLabelsDown = () => {
     circle.shiftLabelsDown();
-    circle.draw(svgRef.current);
+    circle.draw(svgRef.current)
+    renderChords()
   };
 
   return (
@@ -371,7 +369,7 @@ function MainWindow() {
           />
         </div>
 
-        <div>
+        {/* <div>
           <div className="text-red-500 gap-y-2 flex justify-self-start p-5 flex-col">
             <button
               id="draw-btn"
@@ -401,7 +399,7 @@ function MainWindow() {
               )}
             </button>
           </div>
-        </div>
+        </div> */}
 
         <div className="text-gray flex flex-col justify-center items-center w-full">
 

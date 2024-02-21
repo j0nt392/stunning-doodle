@@ -7,12 +7,11 @@ export default class ChromaticCircle extends MusicalCircle {
     // Define the inner and outer radius to create the ring effect
     const innerRadius = this.radius * 0.99; // Adjust as necessary for the desired ring thickness
     const outerRadius = this.radius;
-    const segmentAngle = (2 * Math.PI) / this.labels.length;
+    const segmentAngle = (2 * Math.PI) / Object.keys(this.labels).length;
 
-    this.labels.forEach((label, index) => {
+    Object.entries(this.labels).forEach(([key,label], index) => {
       const angleStart = segmentAngle * index - Math.PI / 2 + 50;
       const angleEnd = segmentAngle * (index + 1) - Math.PI / 2 + 50;
-
       // Create the arc path for the ring segment
       const arc = d3.arc()
         .innerRadius(innerRadius)
@@ -41,7 +40,7 @@ export default class ChromaticCircle extends MusicalCircle {
         .attr('text-anchor', 'middle')
         .attr('alignment-baseline', 'middle')
         .attr('fill', '#D1D5DB')
-        .text(label);
+        .text(`${key}  ${label}`);
     });
   }
     // Drawing logic for a chromatic circle, e.g., colored arcs

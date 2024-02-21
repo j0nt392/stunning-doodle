@@ -15,6 +15,11 @@ function Sidebar({
   const [isScalesModesVisible, setIsScalesModesVisible] = useState(true);
   const [isProgressionsVisible, setIsProgressionsVisible] = useState(true);
   const [devices, setDevices] = useState(true)
+  const [connectedDevice, setConnectedDevice] = useState([])
+  useEffect(() => {
+    setConnectedDevice(connectedDevices)
+  }, [connectedDevices])
+
   // Toggle functions for each section
   const toggleCircleSettingsVisibility = () => {
     setIsCircleSettingsVisible(!isCircleSettingsVisible);
@@ -182,7 +187,6 @@ function Sidebar({
             <option>Choose color scheme</option>
             <option value="monochrome">Default</option>
             <option value="rainbow">Rainbow</option>
-            <option value="theoretic">Theoretic</option>
           </select>
           <label htmlFor="circle-color-scheme">Circle Color</label>
           <select
@@ -191,9 +195,8 @@ function Sidebar({
             value={settings.circleColorScheme}
             onChange={handleColorSchemeChange}
           >
-            <option value="monochrome">Default</option>
             <option value="rainbow">Rainbow</option>
-            <option value="theoretic">Theoretic</option>
+            <option value="monochrome">Default</option>
           </select>
         </div>
       )}
@@ -272,13 +275,24 @@ function Sidebar({
             </option>
           </select>
         </div>
-        {connectedDevices.map((device, index) => (
+        
+        <>
+        {connectedDevice.length > 0 ? 
+        connectedDevice.map((device, index) => (
           <div key={index}>
-            <h5>Device Name: {device.name}</h5>
-
+            <h5>Device Name: {device.name }</h5>
             <h5>Status: {device.state}</h5>
           </div>
-        ))}
+        ))
+        :<div>
+        <h5>Device Name: No device found</h5>
+        <h5>Status: Offline</h5>
+      </div>
+        }
+        </>
+      
+      
+      
       {!devices && (
         <>
       <div className="text-black rounded text-center flex w-full relative">

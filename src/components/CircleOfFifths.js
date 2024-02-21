@@ -5,19 +5,30 @@ export default class CircleOfFifths extends MusicalCircle {
   constructor(radius) {
     super(radius);
     // Order the labels according to the Circle of Fifths
-    this.labels = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
-  }
+    this.labels = {
+      'I': 'C',
+      'V': 'G',
+      'II': 'D',
+      'VI': 'A',
+      'III': 'E',
+      'VII': 'B',
+      'bV': 'Gb',
+      'bII': 'Db',
+      'bVI': 'Ab',
+      'bIII': 'Eb',
+      'bVII': 'Bb',
+      'IV': 'F'
+    };  }
   draw(svgContainer) {
     super.clear(svgContainer); // Call the clear method from the parent class
     // Define the inner and outer radius to create the ring effect
     const innerRadius = this.radius * 0.99; // Adjust as necessary for the desired ring thickness
     const outerRadius = this.radius;
-    const segmentAngle = (2 * Math.PI) / this.labels.length;
+    const segmentAngle = (2 * Math.PI) / Object.keys(this.labels).length;
 
-    this.labels.forEach((label, index) => {
+    Object.entries(this.labels).forEach(([key,label], index) => {
       const angleStart = segmentAngle * index - Math.PI / 2 + 50;
       const angleEnd = segmentAngle * (index + 1) - Math.PI / 2 + 50;
-
       // Create the arc path for the ring segment
       const arc = d3.arc()
         .innerRadius(innerRadius)
@@ -46,7 +57,7 @@ export default class CircleOfFifths extends MusicalCircle {
         .attr('fill', '#D1D5DB')
         .attr('text-anchor', 'middle')
         .attr('alignment-baseline', 'middle')
-        .text(label);
+        .text(`${key}  ${label}`);
     });
   }
     // Drawing logic for a chromatic circle, e.g., colored arcs

@@ -42,7 +42,7 @@ const MidiComponent = ({ onActiveNotesChange, onDevicesChange  }) => {
     useEffect(() => {
         // Function to handle MIDI device connection
         const onMIDISuccess = (midiAccess) => {
-            console.log('MIDI Access Object', midiAccess);
+            //console.log('MIDI Access Object', midiAccess);
 
             // Listen to connected MIDI input devices
             const inputs = midiAccess.inputs.values();
