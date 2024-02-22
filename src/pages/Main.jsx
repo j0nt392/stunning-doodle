@@ -176,7 +176,6 @@ function MainWindow() {
   const handleActiveNotesChange = useCallback((newNotes) => {
     // Update active notes as before
     setActiveMidiNotes(newNotes);
-
     // If a new chord is played (3 or more notes), add it to playedChords
     if (newNotes.length >= 3) {
       setPlayedChords((prevChords) => {
@@ -217,7 +216,7 @@ function MainWindow() {
   };
 
   const [settings, setSettings] = useState({
-    circleType: "Chromatic circle",
+    circleType: "Full circle of fifths",
     enharmonic: false,
     dottedLines: false,
     circleColorScheme: "Rainbow",
@@ -329,6 +328,7 @@ function MainWindow() {
   useEffect(() => {
     if(svgRef.current && circle){
       circle.draw(svgRef.current)
+
     }
       renderChords()
     if(settings.key && settings.mode && settings.circleType === 'Chromatic circle'){
@@ -369,7 +369,7 @@ function MainWindow() {
           />
         </div>
 
-        {/* <div>
+        <div>
           <div className="text-red-500 gap-y-2 flex justify-self-start p-5 flex-col">
             <button
               id="draw-btn"
@@ -399,7 +399,7 @@ function MainWindow() {
               )}
             </button>
           </div>
-        </div> */}
+        </div>
 
         <div className="text-gray flex flex-col justify-center items-center w-full">
 

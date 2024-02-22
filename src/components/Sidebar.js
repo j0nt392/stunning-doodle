@@ -15,11 +15,6 @@ function Sidebar({
   const [isScalesModesVisible, setIsScalesModesVisible] = useState(true);
   const [isProgressionsVisible, setIsProgressionsVisible] = useState(true);
   const [devices, setDevices] = useState(true)
-  const [connectedDevice, setConnectedDevice] = useState([])
-  useEffect(() => {
-    setConnectedDevice(connectedDevices)
-  }, [connectedDevices])
-
   // Toggle functions for each section
   const toggleCircleSettingsVisibility = () => {
     setIsCircleSettingsVisible(!isCircleSettingsVisible);
@@ -129,9 +124,9 @@ function Sidebar({
             onChange={handleCircleType}
             className="circle-select"
           >
+            <option value="Full circle of fifths">Full circle of fifths</option>
             <option value="Chromatic circle">Chromatic circle</option>
             <option value="Circle of fifths">Circle of fifths</option>
-            <option value="Full circle of fifths">Full circle of fifths</option>
             <option value="Coltrane circle">Coltrane circle</option>
           </select>
           <div>
@@ -276,20 +271,14 @@ function Sidebar({
           </select>
         </div>
         
-        <>
-        {connectedDevice.length > 0 ? 
-        connectedDevice.map((device, index) => (
+        {
+        connectedDevices.map((device, index) => (
           <div key={index}>
-            <h5>Device Name: {device.name }</h5>
+            <h5>Device Name: {device.name}</h5>
             <h5>Status: {device.state}</h5>
           </div>
         ))
-        :<div>
-        <h5>Device Name: No device found</h5>
-        <h5>Status: Offline</h5>
-      </div>
         }
-        </>
       
       
       
